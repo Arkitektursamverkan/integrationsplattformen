@@ -1,0 +1,62 @@
+[
+  {
+    "external_id": "sp-001",
+    "name": "SAP S/4HANA",
+    "description": "Centralt affärssystem för ekonomi, controlling, inköp och logistik",
+    "attributes": { "leverantör": "SAP", "kategori": "ERP", "avdelning": "Ekonomi & Verksamhet" }
+  },
+  {
+    "external_id": "sp-002",
+    "name": "Workday",
+    "description": "HR-system för personalhantering, lön och kompetensutveckling",
+    "attributes": { "leverantör": "Workday", "kategori": "HCM", "avdelning": "HR" }
+  },
+  {
+    "external_id": "sp-003",
+    "name": "ServiceNow",
+    "description": "IT-tjänstehanteringsplattform för ärendehantering och arbetsflödesautomation",
+    "attributes": { "leverantör": "ServiceNow", "kategori": "ITSM", "avdelning": "IT" }
+  },
+  {
+    "external_id": "sp-004",
+    "name": "Microsoft 365",
+    "description": "Produktivitetssvit: Exchange, Teams, SharePoint och OneDrive",
+    "attributes": { "leverantör": "Microsoft", "kategori": "Produktivitet", "avdelning": "Alla" }
+  },
+  {
+    "external_id": "sp-005",
+    "name": "Salesforce",
+    "description": "CRM-plattform för kundrelationshantering och försäljningsprocesser",
+    "attributes": { "leverantör": "Salesforce", "kategori": "CRM", "avdelning": "Försäljning & Marknad" }
+  },
+  {
+    "external_id": "sp-006",
+    "name": "Azure Active Directory",
+    "description": "Molnbaserad identitets- och åtkomsthanteringstjänst",
+    "attributes": { "leverantör": "Microsoft", "kategori": "IAM", "avdelning": "IT" }
+  },
+  {
+    "external_id": "sp-007",
+    "name": "Power BI",
+    "description": "Plattform för affärsintelligens och dataanalys",
+    "attributes": { "leverantör": "Microsoft", "kategori": "BI/Analys", "avdelning": "Ekonomi & Verksamhet" }
+  },
+  {
+    "external_id": "sp-008",
+    "name": "Jira Software",
+    "description": "Projekt- och ärendehantering för IT-team och mjukvaruutveckling",
+    "attributes": { "leverantör": "Atlassian", "kategori": "Projekthantering", "avdelning": "IT" }
+  },
+  {
+    "external_id": "sp-009",
+    "name": "Confluence",
+    "description": "Kunskapshantering och teamsamarbete via wiki-sidor",
+    "attributes": { "leverantör": "Atlassian", "kategori": "Kunskapshantering", "avdelning": "Alla" }
+  },
+  {
+    "external_id": "sp-010",
+    "name": "DocuSign",
+    "description": "Elektroniska signaturer och avtalshantering",
+    "attributes": { "leverantör": "DocuSign", "kategori": "Avtalshantering", "avdelning": "Juridik & Ekonomi" }
+  }
+]

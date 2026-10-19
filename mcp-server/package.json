@@ -1,0 +1,17 @@
+{
+  "name": "integration-platform-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for the Integration Platform — lets AI agents manage integrations via tool calls",
+  "type": "module",
+  "main": "server.js",
+  "bin": {
+    "integration-platform-mcp": "server.js"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.28.0",
+    "zod": "^3.25.76"
+  }
+}

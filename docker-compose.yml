@@ -1,0 +1,82 @@
+# Integration Platform – generic installation.
+#
+# Everything installation-specific comes from .env (see .env.example). An
+# organisation's own additions go in an overlay file listed in COMPOSE_FILE in
+# .env, so this file stays the same for everyone.
+
+services:
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: integration_db
+      POSTGRES_USER: integration_user
+      # Only read when the volume is first created; changing it afterwards
+      # needs ALTER USER in the database as well.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-integration_pass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U integration_user -d integration_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ── Redis (scheduler job store + future task queue) ─────────────────────────
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # ── FastAPI backend ─────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      target: runtime
+    # Published so that Arkitekturportalen can reach the API.
+    ports:
+      - "${API_PORT:-8100}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://integration_user:${POSTGRES_PASSWORD:-integration_pass}@db:5432/integration_db
+      REDIS_URL: redis://redis:6379/0
+      # Anything but development/test refuses to start with placeholder
+      # secrets – see .env.example for how to generate them.
+      APP_ENV: ${APP_ENV:-production}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      JWT_SECRET: ${JWT_SECRET:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3100}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      EXECUTION_LOG_RETENTION_DAYS: ${EXECUTION_LOG_RETENTION_DAYS:-30}
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
+      POST_EXEC_WEBHOOK_SECRET: ${POST_EXEC_WEBHOOK_SECRET:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend/seed:/app/seed:ro
+    restart: unless-stopped
+
+  # ── React frontend ──────────────────────────────────────────────────────────
+  web:
+    build:
+      context: ./frontend
+      target: runtime
+    ports:
+      - "${WEB_PORT:-3100}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

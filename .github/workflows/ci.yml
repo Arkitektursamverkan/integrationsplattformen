@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # The release workflow runs the same checks before it publishes images.
+  workflow_call:
+
+jobs:
+  # ── Backend ───────────────────────────────────────────────────────────────────
+  backend:
+    name: Backend — test
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      # The suite runs on SQLite (see tests/conftest.py).
+      - name: Run tests
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///test.db
+          ENCRYPTION_KEY: test-key
+          ADMIN_API_KEY: test-key
+          JWT_SECRET: test-key
+          APP_ENV: test
+        run: python -m pytest -q
+
+  # ── Frontend ──────────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend — type-check + build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build (includes tsc)
+        run: npm run build
+
+  # ── Docker build smoke test ───────────────────────────────────────────────────
+  docker:
+    name: Docker build smoke test
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # A fresh installation as another organisation would make it: production
+      # mode, generated secrets, no overlay.
+      - name: Write .env
+        run: |
+          cp .env.example .env
+          for k in ENCRYPTION_KEY ADMIN_API_KEY JWT_SECRET; do
+            sed -i "s/^$k=.*/$k=$(openssl rand -hex 32)/" .env
+          done
+          sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$(openssl rand -hex 16)/" .env
+
+      - name: Build and start
+        run: docker compose up -d --build
+
+      - name: Wait for API health through nginx
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3100/api/v1/health; then
+              echo; echo "API is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API did not become healthy in time"
+          docker compose logs api web
+          exit 1
+
+      - name: Compose overlays are valid
+        run: |
+          docker network create arkitekturportalen
+          COMPOSE_FILE=docker-compose.yml:deploy/shared-network.yml docker compose config --quiet
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

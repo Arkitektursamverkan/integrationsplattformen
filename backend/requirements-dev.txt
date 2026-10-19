@@ -1,0 +1,18 @@
+# Test-only dependencies. Not installed in the runtime image.
+#
+# The suite runs against SQLite by default (see tests/conftest.py). Note that
+# conftest uses os.environ.setdefault, so an already-set DATABASE_URL WINS —
+# running pytest inside the api container would therefore hit the platform's
+# real database. Always pass an explicit DATABASE_URL:
+#
+#   docker run --rm -v "$PWD":/app -w /app -e PYTHONPATH=/app \
+#     -e DATABASE_URL='sqlite+aiosqlite:///test.db' \
+#     -e ENCRYPTION_KEY=k -e ADMIN_API_KEY=k -e JWT_SECRET=k \
+#     integrationplatform-api \
+#     sh -c 'pip install -q -r requirements-dev.txt && python -m pytest -q'
+#
+# Models that use JSONB/UUID need real PostgreSQL; those tests need a
+# throwaway postgres container rather than SQLite.
+pytest==8.3.3
+pytest-asyncio==0.24.0
+aiosqlite==0.20.0

@@ -1,0 +1,62 @@
+[
+  {
+    "external_id": "2c8-001",
+    "name": "Medarbetarintroduktion",
+    "description": "Helhetsprocess för att integrera nyanställda: konton, utrustning och utbildning",
+    "attributes": { "ägare": "HR", "kategori": "HR-verksamhet", "frekvens": "löpande" }
+  },
+  {
+    "external_id": "2c8-002",
+    "name": "Fakturahantering",
+    "description": "Ta emot, granska, godkänna och bokföra leverantörsfakturor i leverantörsreskontra",
+    "attributes": { "ägare": "Ekonomi", "kategori": "Leverantörsreskontra", "frekvens": "dagligen" }
+  },
+  {
+    "external_id": "2c8-003",
+    "name": "IT-tjänsteförfrågan",
+    "description": "Hantera medarbetarförfrågningar om IT-tjänster, programvarubehörigheter och hårdvara",
+    "attributes": { "ägare": "IT", "kategori": "ITSM", "frekvens": "löpande" }
+  },
+  {
+    "external_id": "2c8-004",
+    "name": "Årsbudgetering",
+    "description": "Samla in, konsolidera och godkänna avdelningsbudgetar inför kommande räkenskapsår",
+    "attributes": { "ägare": "Ekonomi", "kategori": "Ekonomistyrning", "frekvens": "årligen" }
+  },
+  {
+    "external_id": "2c8-005",
+    "name": "Nykundsanskaffning",
+    "description": "Leadsgenerering, kvalificering, offert och avtalsignering för nya kunder",
+    "attributes": { "ägare": "Försäljning", "kategori": "Försäljning", "frekvens": "löpande" }
+  },
+  {
+    "external_id": "2c8-006",
+    "name": "Lönekörning",
+    "description": "Månadsvis löneberäkning, godkännande och utbetalning till medarbetare",
+    "attributes": { "ägare": "HR", "kategori": "Lön", "frekvens": "månadsvis" }
+  },
+  {
+    "external_id": "2c8-007",
+    "name": "Leverantörsinköp",
+    "description": "Inköpsrekvisition, leverantörsurval, inköpsorder och varuinleverans",
+    "attributes": { "ägare": "Inköp", "kategori": "Procure-to-Pay", "frekvens": "löpande" }
+  },
+  {
+    "external_id": "2c8-008",
+    "name": "IT-ändringshantering",
+    "description": "Begära, bedöma, godkänna och genomföra ändringar i IT-infrastruktur och system",
+    "attributes": { "ägare": "IT", "kategori": "ITSM", "frekvens": "löpande" }
+  },
+  {
+    "external_id": "2c8-009",
+    "name": "Medarbetarsamtal",
+    "description": "Årlig prestationsutvärdering, målsättning och kompetensutvecklingsplanering",
+    "attributes": { "ägare": "HR", "kategori": "Talanghantering", "frekvens": "årligen" }
+  },
+  {
+    "external_id": "2c8-010",
+    "name": "Finansiell rapportering",
+    "description": "Månadsavslut, konsolidering och lagstadgad samt intern ekonomisk rapportering",
+    "attributes": { "ägare": "Ekonomi", "kategori": "Finansiell rapportering", "frekvens": "månadsvis" }
+  }
+]

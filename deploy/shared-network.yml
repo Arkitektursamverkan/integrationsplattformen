@@ -1,0 +1,21 @@
+# Puts the platform's API on the shared Docker network "arkitekturportalen", so
+# Arkitekturportalen reaches it as http://integration-platform:8000 instead of
+# going through the host. Pairs with Arkitekturportalen's
+# deploy/integration-platform.yml.
+#
+# Create the network once per server:  docker network create arkitekturportalen
+# and load this file from .env:
+#   COMPOSE_FILE=docker-compose.yml:deploy/shared-network.yml
+
+services:
+  api:
+    networks:
+      default: {}
+      arkitekturportalen:
+        aliases:
+          - integration-platform
+
+networks:
+  arkitekturportalen:
+    name: arkitekturportalen
+    external: true
