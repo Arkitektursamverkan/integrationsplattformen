@@ -1,0 +1,1215 @@
+{
+  "kontrakt": 1,
+  "/api/flows": {
+    "ok": true,
+    "kontrakt": 1,
+    "flows": [
+      {
+        "id": "ap-exempel-rekrytering",
+        "name": "Rekrytering",
+        "savedAt": "2026-10-22T08:00:00.000Z",
+        "familj": "affarsprocess",
+        "stepCount": 5,
+        "versionCount": 1,
+        "category": "Exempel",
+        "actor": "Användare",
+        "status": "fastslagen",
+        "beteckning": "1.0",
+        "fastslagenBeteckning": "1.0"
+      },
+      {
+        "id": "exempel-bestall-behorighet",
+        "name": "Beställ behörighet",
+        "savedAt": "2026-10-22T08:00:00.000Z",
+        "familj": "flodesschema",
+        "stepCount": 10,
+        "versionCount": 1,
+        "category": "Exempel",
+        "actor": "Användare",
+        "status": "fastslagen",
+        "beteckning": "1.0",
+        "fastslagenBeteckning": "1.0"
+      }
+    ]
+  },
+  "/api/flows/{id}/scen": {
+    "ap-exempel-rekrytering": {
+      "ok": true,
+      "scen": {
+        "format": "ark-scen",
+        "formatVersion": 1,
+        "familj": "affarsprocess",
+        "flöde": {
+          "id": "ap-exempel-rekrytering",
+          "namn": "Rekrytering",
+          "sparad": "2026-10-22T08:00:00.000Z",
+          "status": "fastslagen",
+          "beteckning": "1.0",
+          "fastslagenBeteckning": "1.0"
+        },
+        "vy": {
+          "pageFormat": "free",
+          "scale": 1,
+          "spacing": 1,
+          "textScale": 1
+        },
+        "defs": "<marker id=\"ap-arrow-flode\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#4f6f99\"/></marker>\n<marker id=\"ap-arrow-huki\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#2563eb\"/></marker>\n<marker id=\"ap-arrow-samverkar\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#111827\"/></marker>\n<marker id=\"ap-arrow-adresserar\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#6d28d9\"/></marker>\n<marker id=\"ap-arrow-styr\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#6b7280\"/></marker>\n<marker id=\"ap-arrow-stodjer\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#6b7280\"/></marker>\n<marker id=\"ap-arrow-bestar\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#6b7280\"/></marker>\n<marker id=\"ap-arrow-huki-H\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#b91c1c\"/></marker>\n<marker id=\"ap-arrow-huki-U\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#2563eb\"/></marker>\n<marker id=\"ap-arrow-huki-K\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#0f766e\"/></marker>\n<marker id=\"ap-arrow-huki-I\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"7\" markerHeight=\"7\" orient=\"auto\"><path d=\"M0,0 L10,5 L0,10 Z\" fill=\"#ca8a04\"/></marker>",
+        "bredd": 1929.54,
+        "höjd": 366,
+        "skala": 1,
+        "sidor": [
+          {
+            "index": 0,
+            "x": 0,
+            "y": 0,
+            "w": 1929.54,
+            "h": 366
+          }
+        ],
+        "hänvisningar": [],
+        "noder": [
+          {
+            "id": "s1",
+            "typ": "vo",
+            "etikett": "Behov av ny medarbetare",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><rect x=\"28.5\" y=\"4\" width=\"24\" height=\"24\" rx=\"2\" fill=\"#4b5563\" stroke=\"#374151\" stroke-width=\"1.4\"/>\n<text x=\"40.5\" y=\"43.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"11.0\" fill=\"#374151\">Behov av ny</text>\n<text x=\"40.5\" y=\"56.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"11.0\" fill=\"#374151\">medarbetare</text></g>",
+            "x": 24,
+            "y": 124,
+            "w": 81,
+            "h": 64,
+            "sida": 0,
+            "stil": {
+              "fill": "#4b5563",
+              "stroke": "#374151",
+              "text": "#ffffff"
+            }
+          },
+          {
+            "id": "s2",
+            "typ": "aktivitet",
+            "etikett": "Ta fram kravprofil",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><rect x=\"0.5\" y=\"0.5\" width=\"140\" height=\"53\" rx=\"8\" fill=\"#f4f7fb\" stroke=\"#4f6f99\" stroke-width=\"1\"/>\n<text x=\"70.5\" y=\"31.2\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2d3d\">Ta fram kravprofil</text></g>",
+            "x": 240.66499999999996,
+            "y": 113,
+            "w": 141,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#f4f7fb",
+              "stroke": "#4f6f99",
+              "text": "#1f2d3d"
+            }
+          },
+          {
+            "id": "s3",
+            "typ": "aktivitet",
+            "etikett": "Annonsera tjänsten",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><rect x=\"0.5\" y=\"0.5\" width=\"140\" height=\"53\" rx=\"8\" fill=\"#f4f7fb\" stroke=\"#4f6f99\" stroke-width=\"1\"/>\n<text x=\"70.5\" y=\"31.2\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2d3d\">Annonsera tjänsten</text></g>",
+            "x": 640.3299999999999,
+            "y": 113,
+            "w": 141,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#f4f7fb",
+              "stroke": "#4f6f99",
+              "text": "#1f2d3d"
+            }
+          },
+          {
+            "id": "s4",
+            "typ": "aktivitet",
+            "etikett": "Genomför urval",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><rect x=\"0.5\" y=\"0.5\" width=\"131\" height=\"53\" rx=\"8\" fill=\"#f4f7fb\" stroke=\"#4f6f99\" stroke-width=\"1\"/>\n<text x=\"66.0\" y=\"31.2\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2d3d\">Genomför urval</text></g>",
+            "x": 1165.375,
+            "y": 113,
+            "w": 132,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#f4f7fb",
+              "stroke": "#4f6f99",
+              "text": "#1f2d3d"
+            }
+          },
+          {
+            "id": "s5",
+            "typ": "aktivitet",
+            "etikett": "Erbjud anställning",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><rect x=\"0.5\" y=\"0.5\" width=\"140\" height=\"53\" rx=\"8\" fill=\"#f4f7fb\" stroke=\"#4f6f99\" stroke-width=\"1\"/>\n<text x=\"70.5\" y=\"31.2\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2d3d\">Erbjud anställning</text></g>",
+            "x": 1574.54,
+            "y": 113,
+            "w": 141,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#f4f7fb",
+              "stroke": "#4f6f99",
+              "text": "#1f2d3d"
+            }
+          },
+          {
+            "id": "end_s5",
+            "typ": "vo",
+            "etikett": "Anställningsavtal",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><rect x=\"47\" y=\"4\" width=\"24\" height=\"24\" rx=\"2\" fill=\"#4b5563\" stroke=\"#374151\" stroke-width=\"1.4\"/>\n<text x=\"59.0\" y=\"43.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"11.0\" fill=\"#374151\">Anställningsavtal</text></g>",
+            "x": 1787.54,
+            "y": 124,
+            "w": 118,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#4b5563",
+              "stroke": "#374151",
+              "text": "#ffffff"
+            }
+          },
+          {
+            "id": "vo_s2",
+            "typ": "vo",
+            "etikett": "Kravprofil",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><rect x=\"26\" y=\"4\" width=\"24\" height=\"24\" rx=\"2\" fill=\"#4b5563\" stroke=\"#374151\" stroke-width=\"1.4\"/>\n<text x=\"38.0\" y=\"43.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"11.0\" fill=\"#374151\">Kravprofil</text></g>",
+            "x": 453.66499999999996,
+            "y": 124,
+            "w": 76,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#4b5563",
+              "stroke": "#374151",
+              "text": "#ffffff"
+            }
+          },
+          {
+            "id": "vo_s3",
+            "typ": "vo",
+            "etikett": "Ansökningar",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><rect x=\"28.5\" y=\"4\" width=\"24\" height=\"24\" rx=\"2\" fill=\"#4b5563\" stroke=\"#374151\" stroke-width=\"1.4\"/>\n<text x=\"40.5\" y=\"43.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"11.0\" fill=\"#374151\">Ansökningar</text></g>",
+            "x": 934.995,
+            "y": 124,
+            "w": 81,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#4b5563",
+              "stroke": "#374151",
+              "text": "#ffffff"
+            }
+          },
+          {
+            "id": "vo_s4",
+            "typ": "vo",
+            "etikett": "Slutkandidat",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><rect x=\"31.5\" y=\"4\" width=\"24\" height=\"24\" rx=\"2\" fill=\"#4b5563\" stroke=\"#374151\" stroke-width=\"1.4\"/>\n<text x=\"43.5\" y=\"43.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"11.0\" fill=\"#374151\">Slutkandidat</text></g>",
+            "x": 1376.875,
+            "y": 124,
+            "w": 87,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#4b5563",
+              "stroke": "#374151",
+              "text": "#ffffff"
+            }
+          },
+          {
+            "id": "krav_s4_likabehandling",
+            "typ": "krav",
+            "etikett": "Likabehandling",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><polygon points=\"16,1 131,1 146,28 131,55 16,55 1,28\" fill=\"#ddd6fe\" stroke=\"#6d28d9\" stroke-width=\"1.6\"/>\n<text x=\"73.5\" y=\"32.2\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"12.0\" fill=\"#2e1065\">Likabehandling</text></g>",
+            "x": 1157.875,
+            "y": 30,
+            "w": 147,
+            "h": 56,
+            "sida": 0,
+            "stil": {
+              "fill": "#ddd6fe",
+              "stroke": "#6d28d9",
+              "text": "#2e1065"
+            }
+          },
+          {
+            "id": "tid_s5_inom-5-dagar",
+            "typ": "tid",
+            "etikett": "Inom 5 dagar",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><circle cx=\"43.5\" cy=\"15\" r=\"12\" fill=\"#ffffff\" stroke=\"#4b5563\" stroke-width=\"1.6\"/>\n<line x1=\"43.5\" y1=\"15\" x2=\"43.5\" y2=\"8\" stroke=\"#4b5563\" stroke-width=\"1.4\"/>\n<line x1=\"43.5\" y1=\"15\" x2=\"48.5\" y2=\"18\" stroke=\"#4b5563\" stroke-width=\"1.4\"/>\n<text x=\"43.5\" y=\"43.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"11.0\" fill=\"#374151\">Inom 5 dagar</text></g>",
+            "x": 1601.54,
+            "y": 24,
+            "w": 87,
+            "h": 62,
+            "sida": 0,
+            "stil": {
+              "fill": "#ffffff",
+              "stroke": "#4b5563",
+              "text": "#1f2937"
+            }
+          },
+          {
+            "id": "roll_s2_rekryterande-chef",
+            "typ": "roll",
+            "etikett": "Rekryterande chef",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><circle cx=\"59\" cy=\"10.5\" r=\"5.8\" fill=\"#60a5fa\" stroke=\"#1d4ed8\" stroke-width=\"1.2\"/>\n<path d=\"M48,27.5 C48,20 52.5,17.5 59,17.5 C65.5,17.5 70,20 70,27.5 Z\" fill=\"#60a5fa\" stroke=\"#1d4ed8\" stroke-width=\"1.2\"/>\n<text x=\"59.0\" y=\"43.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"11.0\" fill=\"#374151\">Rekryterande chef</text></g>",
+            "x": 176.99999999999994,
+            "y": 210,
+            "w": 118,
+            "h": 58,
+            "sida": 0,
+            "stil": {
+              "fill": "#60a5fa",
+              "stroke": "#1d4ed8",
+              "text": "#1e3a8a"
+            }
+          },
+          {
+            "id": "roll_s3_hr-specialist",
+            "typ": "roll",
+            "etikett": "HR-specialist",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><circle cx=\"46.5\" cy=\"10.5\" r=\"5.8\" fill=\"#60a5fa\" stroke=\"#1d4ed8\" stroke-width=\"1.2\"/>\n<path d=\"M35.5,27.5 C35.5,20 40,17.5 46.5,17.5 C53,17.5 57.5,20 57.5,27.5 Z\" fill=\"#60a5fa\" stroke=\"#1d4ed8\" stroke-width=\"1.2\"/>\n<text x=\"46.5\" y=\"43.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"11.0\" fill=\"#374151\">HR-specialist</text></g>",
+            "x": 601.665,
+            "y": 210,
+            "w": 93,
+            "h": 58,
+            "sida": 0,
+            "stil": {
+              "fill": "#60a5fa",
+              "stroke": "#1d4ed8",
+              "text": "#1e3a8a"
+            }
+          },
+          {
+            "id": "applikation_s3_rekryteringssystemet",
+            "typ": "applikation",
+            "etikett": "Rekryteringssystemet",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><path d=\"M55,10 a13,5 0 0 1 26,0 v14 a13,5 0 0 1 -26,0 Z\" fill=\"#9ca3af\" stroke=\"#4b5563\" stroke-width=\"1.3\"/>\n<ellipse cx=\"68\" cy=\"10\" rx=\"13\" ry=\"5\" fill=\"#d1d5db\" stroke=\"#4b5563\" stroke-width=\"1.1\"/>\n<text x=\"68.0\" y=\"43.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"11.0\" fill=\"#374151\">Rekryteringssystemet</text></g>",
+            "x": 726.9949999999999,
+            "y": 210,
+            "w": 136,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#9ca3af",
+              "stroke": "#4b5563",
+              "text": "#1f2937",
+              "ljus": "#d1d5db"
+            }
+          },
+          {
+            "id": "roll_s4_rekryterande-chef",
+            "typ": "roll",
+            "etikett": "Rekryterande chef",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><circle cx=\"59\" cy=\"10.5\" r=\"5.8\" fill=\"#60a5fa\" stroke=\"#1d4ed8\" stroke-width=\"1.2\"/>\n<path d=\"M48,27.5 C48,20 52.5,17.5 59,17.5 C65.5,17.5 70,20 70,27.5 Z\" fill=\"#60a5fa\" stroke=\"#1d4ed8\" stroke-width=\"1.2\"/>\n<text x=\"59.0\" y=\"43.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"11.0\" fill=\"#374151\">Rekryterande chef</text></g>",
+            "x": 1087.9950000000001,
+            "y": 210,
+            "w": 118,
+            "h": 58,
+            "sida": 0,
+            "stil": {
+              "fill": "#60a5fa",
+              "stroke": "#1d4ed8",
+              "text": "#1e3a8a"
+            }
+          },
+          {
+            "id": "roll_s4_hr-specialist",
+            "typ": "roll",
+            "etikett": "HR-specialist",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><circle cx=\"46.5\" cy=\"10.5\" r=\"5.8\" fill=\"#60a5fa\" stroke=\"#1d4ed8\" stroke-width=\"1.2\"/>\n<path d=\"M35.5,27.5 C35.5,20 40,17.5 46.5,17.5 C53,17.5 57.5,20 57.5,27.5 Z\" fill=\"#60a5fa\" stroke=\"#1d4ed8\" stroke-width=\"1.2\"/>\n<text x=\"46.5\" y=\"43.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"11.0\" fill=\"#374151\">HR-specialist</text></g>",
+            "x": 1100.4950000000001,
+            "y": 284,
+            "w": 93,
+            "h": 58,
+            "sida": 0,
+            "stil": {
+              "fill": "#60a5fa",
+              "stroke": "#1d4ed8",
+              "text": "#1e3a8a"
+            }
+          },
+          {
+            "id": "roll_s5_hr-specialist",
+            "typ": "roll",
+            "etikett": "HR-specialist",
+            "svg": "<g transform=\"translate(0.0,0.0)\"><circle cx=\"46.5\" cy=\"10.5\" r=\"5.8\" fill=\"#60a5fa\" stroke=\"#1d4ed8\" stroke-width=\"1.2\"/>\n<path d=\"M35.5,27.5 C35.5,20 40,17.5 46.5,17.5 C53,17.5 57.5,20 57.5,27.5 Z\" fill=\"#60a5fa\" stroke=\"#1d4ed8\" stroke-width=\"1.2\"/>\n<text x=\"46.5\" y=\"43.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif\" font-size=\"11.0\" fill=\"#374151\">HR-specialist</text></g>",
+            "x": 1535.875,
+            "y": 210,
+            "w": 93,
+            "h": 58,
+            "sida": 0,
+            "stil": {
+              "fill": "#60a5fa",
+              "stroke": "#1d4ed8",
+              "text": "#1e3a8a"
+            }
+          }
+        ],
+        "kanter": [
+          {
+            "id": "r1",
+            "källa": "s1",
+            "mål": "s2",
+            "typ": "flode",
+            "d": "M79.0,140.0 L241.0,140.0",
+            "färg": "#4f6f99",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-flode"
+          },
+          {
+            "id": "r2",
+            "källa": "s2",
+            "mål": "vo_s2",
+            "typ": "flode",
+            "d": "M382.0,140.0 L478.0,140.0",
+            "färg": "#4f6f99",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-flode"
+          },
+          {
+            "id": "r3",
+            "källa": "vo_s2",
+            "mål": "s3",
+            "typ": "flode",
+            "d": "M506.0,140.0 L640.0,140.0",
+            "färg": "#4f6f99",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-flode"
+          },
+          {
+            "id": "r4",
+            "källa": "s3",
+            "mål": "vo_s3",
+            "typ": "flode",
+            "d": "M781.0,140.0 L961.0,140.0",
+            "färg": "#4f6f99",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-flode"
+          },
+          {
+            "id": "r5",
+            "källa": "vo_s3",
+            "mål": "s4",
+            "typ": "flode",
+            "d": "M989.0,140.0 L1165.0,140.0",
+            "färg": "#4f6f99",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-flode"
+          },
+          {
+            "id": "r6",
+            "källa": "s4",
+            "mål": "vo_s4",
+            "typ": "flode",
+            "d": "M1297.0,140.0 L1406.0,140.0",
+            "färg": "#4f6f99",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-flode"
+          },
+          {
+            "id": "r7",
+            "källa": "vo_s4",
+            "mål": "s5",
+            "typ": "flode",
+            "d": "M1434.0,140.0 L1575.0,140.0",
+            "färg": "#4f6f99",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-flode"
+          },
+          {
+            "id": "r8",
+            "källa": "s5",
+            "mål": "end_s5",
+            "typ": "flode",
+            "d": "M1716.0,140.0 L1833.0,140.0",
+            "färg": "#4f6f99",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-flode"
+          },
+          {
+            "id": "r9",
+            "källa": "roll_s2_rekryterande-chef",
+            "mål": "s2",
+            "typ": "huki",
+            "d": "M250.0,226.0 L298.0,226.0 A4.0,4.0 0 0,0 302.0,222.0 L302.0,167.0",
+            "färg": "#2563eb",
+            "tjocklek": 1.1,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-huki-U"
+          },
+          {
+            "id": "r10",
+            "källa": "roll_s3_hr-specialist",
+            "mål": "s3",
+            "typ": "huki",
+            "d": "M662.0,226.0 L698.0,226.0 A4.0,4.0 0 0,0 702.0,222.0 L702.0,167.0",
+            "färg": "#2563eb",
+            "tjocklek": 1.1,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-huki-U"
+          },
+          {
+            "id": "r11",
+            "källa": "s3",
+            "mål": "applikation_s3_rekryteringssystemet",
+            "typ": "samverkar",
+            "d": "M720.0,167.0 L720.0,222.0 A4.0,4.0 0 0,0 724.0,226.0 L781.0,226.0",
+            "färg": "#111827",
+            "tjocklek": 1.1,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-samverkar"
+          },
+          {
+            "id": "r12",
+            "källa": "roll_s4_rekryterande-chef",
+            "mål": "s4",
+            "typ": "huki",
+            "d": "M1161.0,226.0 L1209.0,226.0 A4.0,4.0 0 0,0 1213.0,222.0 L1213.0,167.0",
+            "färg": "#b91c1c",
+            "tjocklek": 1.1,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-huki-H"
+          },
+          {
+            "id": "r13",
+            "källa": "roll_s4_hr-specialist",
+            "mål": "s4",
+            "typ": "huki",
+            "d": "M1161.0,300.0 L1219.0,300.0 A4.0,4.0 0 0,0 1223.0,296.0 L1223.0,167.0",
+            "färg": "#0f766e",
+            "tjocklek": 1.1,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-huki-K"
+          },
+          {
+            "id": "r14",
+            "källa": "krav_s4_likabehandling",
+            "mål": "s4",
+            "typ": "adresserar",
+            "d": "M1231.0,86.0 L1231.0,113.0",
+            "färg": "#6d28d9",
+            "tjocklek": 1.1,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-adresserar"
+          },
+          {
+            "id": "r15",
+            "källa": "roll_s5_hr-specialist",
+            "mål": "s5",
+            "typ": "huki",
+            "d": "M1596.0,226.0 L1632.0,226.0 A4.0,4.0 0 0,0 1636.0,222.0 L1636.0,167.0",
+            "färg": "#2563eb",
+            "tjocklek": 1.1,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-huki-U"
+          },
+          {
+            "id": "r16",
+            "källa": "tid_s5_inom-5-dagar",
+            "mål": "s5",
+            "typ": "adresserar",
+            "d": "M1645.0,54.0 L1645.0,113.0",
+            "färg": "#6d28d9",
+            "tjocklek": 1.1,
+            "pilspets": "fylld",
+            "markör": "ap-arrow-adresserar"
+          }
+        ],
+        "steg": {
+          "s1": {
+            "text": "Behov av ny medarbetare",
+            "typ": "vo",
+            "källtext": "Behov av ny medarbetare [Ut: Behov fastställt]"
+          },
+          "s2": {
+            "text": "Ta fram kravprofil",
+            "typ": "aktivitet",
+            "källtext": "Ta fram kravprofil [Roll: Rekryterande chef U] [Ut: Kravprofil]"
+          },
+          "s3": {
+            "text": "Annonsera tjänsten",
+            "typ": "aktivitet",
+            "källtext": "Annonsera tjänsten [Roll: HR-specialist U] [IT: Rekryteringssystemet] [Ut: Ansökningar]"
+          },
+          "s4": {
+            "text": "Genomför urval",
+            "typ": "aktivitet",
+            "källtext": "Genomför urval [Roll: Rekryterande chef H] [Roll: HR-specialist K] [Krav: Likabehandling] [Ut: Slutkandidat]"
+          },
+          "s5": {
+            "text": "Erbjud anställning",
+            "typ": "aktivitet",
+            "källtext": "Erbjud anställning [Roll: HR-specialist U] [Tid: Inom 5 dagar] [Ut: Anställningsavtal]"
+          },
+          "end_s5": {
+            "text": "Anställningsavtal",
+            "typ": "vo"
+          },
+          "vo_s2": {
+            "text": "Kravprofil",
+            "typ": "vo"
+          },
+          "vo_s3": {
+            "text": "Ansökningar",
+            "typ": "vo"
+          },
+          "vo_s4": {
+            "text": "Slutkandidat",
+            "typ": "vo"
+          },
+          "roll_s2_rekryterande-chef": {
+            "text": "Rekryterande chef",
+            "typ": "roll"
+          },
+          "roll_s3_hr-specialist": {
+            "text": "HR-specialist",
+            "typ": "roll"
+          },
+          "applikation_s3_rekryteringssystemet": {
+            "text": "Rekryteringssystemet",
+            "typ": "applikation"
+          },
+          "roll_s4_rekryterande-chef": {
+            "text": "Rekryterande chef",
+            "typ": "roll"
+          },
+          "roll_s4_hr-specialist": {
+            "text": "HR-specialist",
+            "typ": "roll"
+          },
+          "krav_s4_likabehandling": {
+            "text": "Likabehandling",
+            "typ": "krav"
+          },
+          "roll_s5_hr-specialist": {
+            "text": "HR-specialist",
+            "typ": "roll"
+          },
+          "tid_s5_inom-5-dagar": {
+            "text": "Inom 5 dagar",
+            "typ": "tid"
+          }
+        },
+        "figurer": [
+          {
+            "titel": "Objekt",
+            "figurer": [
+              {
+                "nyckel": "aktivitet",
+                "namn": "Aktivitet",
+                "betydelse": "Aktivitet – något som utförs i processen.",
+                "antal": 4,
+                "svg": "<g transform=\"translate(2,2)\"><rect x=\"0.5\" y=\"0.5\" width=\"131\" height=\"53\" rx=\"8\" fill=\"#f4f7fb\" stroke=\"#4f6f99\" stroke-width=\"1\"/></g>",
+                "w": 136,
+                "h": 58
+              },
+              {
+                "nyckel": "vo",
+                "namn": "Verksamhetsobjekt",
+                "betydelse": "Verksamhetsobjekt – förädlingsresultatet mellan två aktiviteter.",
+                "antal": 5,
+                "svg": "<g transform=\"translate(2,2)\"><rect x=\"26\" y=\"4\" width=\"24\" height=\"24\" rx=\"2\" fill=\"#4b5563\" stroke=\"#374151\" stroke-width=\"1.4\"/></g>",
+                "w": 80,
+                "h": 58
+              },
+              {
+                "nyckel": "roll",
+                "namn": "Roll",
+                "betydelse": "Roll – den som utför. Pilen till aktiviteten bär HUKI-ansvaret.",
+                "antal": 5,
+                "svg": "<g transform=\"translate(2,2)\"><circle cx=\"44\" cy=\"10.5\" r=\"5.8\" fill=\"#60a5fa\" stroke=\"#1d4ed8\" stroke-width=\"1.2\"/>\n<path d=\"M33,27.5 C33,20 37.5,17.5 44,17.5 C50.5,17.5 55,20 55,27.5 Z\" fill=\"#60a5fa\" stroke=\"#1d4ed8\" stroke-width=\"1.2\"/></g>",
+                "w": 92,
+                "h": 62
+              },
+              {
+                "nyckel": "applikation",
+                "namn": "Applikation",
+                "betydelse": "Applikation – IT-stödet aktiviteten samverkar med.",
+                "antal": 1,
+                "svg": "<g transform=\"translate(2,2)\"><path d=\"M25,10 a13,5 0 0 1 26,0 v14 a13,5 0 0 1 -26,0 Z\" fill=\"#9ca3af\" stroke=\"#4b5563\" stroke-width=\"1.3\"/>\n<ellipse cx=\"38\" cy=\"10\" rx=\"13\" ry=\"5\" fill=\"#d1d5db\" stroke=\"#4b5563\" stroke-width=\"1.1\"/></g>",
+                "w": 80,
+                "h": 58
+              },
+              {
+                "nyckel": "krav",
+                "namn": "Krav",
+                "betydelse": "Krav – vad aktiviteten måste uppfylla. Ritas i bandet ovanför aktiviteten.",
+                "antal": 1,
+                "svg": "<g transform=\"translate(2,2)\"><polygon points=\"16,1 84,1 99,28 84,55 16,55 1,28\" fill=\"#ddd6fe\" stroke=\"#6d28d9\" stroke-width=\"1.6\"/></g>",
+                "w": 104,
+                "h": 60
+              },
+              {
+                "nyckel": "tid",
+                "namn": "Tid",
+                "betydelse": "Tid – ledtid eller tidsgräns. Ritas i bandet ovanför aktiviteten.",
+                "antal": 1,
+                "svg": "<g transform=\"translate(2,2)\"><circle cx=\"31\" cy=\"15\" r=\"12\" fill=\"#ffffff\" stroke=\"#4b5563\" stroke-width=\"1.6\"/>\n<line x1=\"31\" y1=\"15\" x2=\"31\" y2=\"8\" stroke=\"#4b5563\" stroke-width=\"1.4\"/>\n<line x1=\"31\" y1=\"15\" x2=\"36\" y2=\"18\" stroke=\"#4b5563\" stroke-width=\"1.4\"/></g>",
+                "w": 66,
+                "h": 66
+              }
+            ]
+          },
+          {
+            "titel": "Ansvar (HUKI)",
+            "figurer": [
+              {
+                "nyckel": "huki-H",
+                "namn": "H – Huvudansvar",
+                "betydelse": "Aktören har huvudansvaret för aktiviteten.",
+                "antal": 1,
+                "svg": "<line x1=\"1\" y1=\"7\" x2=\"22\" y2=\"7\" stroke=\"#b91c1c\" stroke-width=\"1.8\"/><path d=\"M21.5,3 L29,7 L21.5,11 Z\" fill=\"#b91c1c\"/>",
+                "w": 30,
+                "h": 14
+              },
+              {
+                "nyckel": "huki-U",
+                "namn": "U – Utför",
+                "betydelse": "Aktören utför aktiviteten.",
+                "antal": 3,
+                "svg": "<line x1=\"1\" y1=\"7\" x2=\"22\" y2=\"7\" stroke=\"#2563eb\" stroke-width=\"1.8\"/><path d=\"M21.5,3 L29,7 L21.5,11 Z\" fill=\"#2563eb\"/>",
+                "w": 30,
+                "h": 14
+              },
+              {
+                "nyckel": "huki-K",
+                "namn": "K – Konsulteras",
+                "betydelse": "Aktören konsulteras i aktiviteten.",
+                "antal": 1,
+                "svg": "<line x1=\"1\" y1=\"7\" x2=\"22\" y2=\"7\" stroke=\"#0f766e\" stroke-width=\"1.8\"/><path d=\"M21.5,3 L29,7 L21.5,11 Z\" fill=\"#0f766e\"/>",
+                "w": 30,
+                "h": 14
+              }
+            ],
+            "hint": "Ansvaret bärs av FÄRGEN – bokstaven skrivs aldrig ut i bilden. Håll muspekaren över en linje för att se den i klartext."
+          },
+          {
+            "titel": "Kopplingar",
+            "figurer": [
+              {
+                "nyckel": "rel-flode",
+                "namn": "Flöde",
+                "betydelse": "Förädlingskedjan – ordningen stegen utförs i. Svaret på en regel står på pilen.",
+                "antal": 8,
+                "svg": "<line x1=\"1\" y1=\"7\" x2=\"22\" y2=\"7\" stroke=\"#4f6f99\" stroke-width=\"1.8\"/><path d=\"M21.5,3 L29,7 L21.5,11 Z\" fill=\"#4f6f99\"/>",
+                "w": 30,
+                "h": 14
+              },
+              {
+                "nyckel": "rel-samverkar",
+                "namn": "Samverkar med",
+                "betydelse": "Aktiviteten samverkar med ett IT-stöd, ett arkiv, ett forum eller en plats.",
+                "antal": 1,
+                "svg": "<line x1=\"1\" y1=\"7\" x2=\"22\" y2=\"7\" stroke=\"#111827\" stroke-width=\"1.8\"/><path d=\"M21.5,3 L29,7 L21.5,11 Z\" fill=\"#111827\"/>",
+                "w": 30,
+                "h": 14
+              },
+              {
+                "nyckel": "rel-adresserar",
+                "namn": "Adresserar",
+                "betydelse": "Krav eller tid som aktiviteten måste svara upp mot.",
+                "antal": 2,
+                "svg": "<line x1=\"1\" y1=\"7\" x2=\"22\" y2=\"7\" stroke=\"#6d28d9\" stroke-width=\"1.8\"/><path d=\"M21.5,3 L29,7 L21.5,11 Z\" fill=\"#6d28d9\"/>",
+                "w": 30,
+                "h": 14
+              }
+            ]
+          }
+        ],
+        "revision": {
+          "version": "1.0",
+          "datum": "2026-10-22T08:00:00.000Z",
+          "status": "fastslagen",
+          "osparat": false
+        }
+      }
+    },
+    "exempel-bestall-behorighet": {
+      "ok": true,
+      "scen": {
+        "format": "ark-scen",
+        "formatVersion": 1,
+        "familj": "flodesschema",
+        "flöde": {
+          "id": "exempel-bestall-behorighet",
+          "namn": "Beställ behörighet",
+          "sparad": "2026-10-22T08:00:00.000Z",
+          "status": "fastslagen",
+          "beteckning": "1.0",
+          "fastslagenBeteckning": "1.0"
+        },
+        "vy": {
+          "pageFormat": "free",
+          "scale": 1,
+          "spacing": 1,
+          "textScale": 1
+        },
+        "defs": "<marker id=\"arw\" viewBox=\"0 0 10 10\" markerWidth=\"9\" markerHeight=\"9\" refX=\"9\" refY=\"5\" orient=\"auto\" markerUnits=\"userSpaceOnUse\"><path d=\"M1,2.4 L9,5 L1,7.6 Z\" fill=\"#7b8494\"/></marker><marker id=\"arwOpen\" viewBox=\"0 0 10 10\" markerWidth=\"10\" markerHeight=\"10\" refX=\"9\" refY=\"5\" orient=\"auto\" markerUnits=\"userSpaceOnUse\"><path d=\"M1.5,1.5 L9,5 L1.5,8.5\" fill=\"none\" stroke=\"#7b8494\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></marker><marker id=\"arwData\" viewBox=\"0 0 10 10\" markerWidth=\"7.5\" markerHeight=\"7.5\" refX=\"9\" refY=\"5\" orient=\"auto\" markerUnits=\"userSpaceOnUse\"><path d=\"M2,2 L9,5 L2,8\" fill=\"none\" stroke=\"#7b8494\" stroke-width=\"1.3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></marker>",
+        "bredd": 2262,
+        "höjd": 264,
+        "skala": 1,
+        "sidor": [
+          {
+            "index": 0,
+            "x": 0,
+            "y": 0,
+            "w": 2262,
+            "h": 264
+          }
+        ],
+        "hänvisningar": [],
+        "bakgrund": "<rect x=\"0\" y=\"0\" width=\"2262\" height=\"264\" fill=\"none\" stroke=\"#d7dce4\" stroke-width=\"1.5\"/>\n<rect x=\"0\" y=\"0\" width=\"26\" height=\"264\" fill=\"#e4e8ee\" stroke=\"#d7dce4\"/>\n<text x=\"13\" y=\"132\" transform=\"rotate(-90 13 132)\" text-anchor=\"middle\" font-size=\"11.0\" font-weight=\"700\" fill=\"#3b465c\" dominant-baseline=\"middle\" letter-spacing=\"0.3\">BESTÄLL BEHÖRIGHET</text>\n<rect x=\"26\" y=\"0\" width=\"2236\" height=\"126\" fill=\"#fafbfc\" stroke=\"#d7dce4\"/>\n<rect x=\"26\" y=\"0\" width=\"2236\" height=\"28\" fill=\"#eaedf2\" stroke=\"#d7dce4\"/>\n<text x=\"38\" y=\"14\" font-size=\"12.5\" font-weight=\"600\" fill=\"#3b465c\" dominant-baseline=\"middle\">Användare</text>\n<rect x=\"26\" y=\"126\" width=\"2236\" height=\"138\" fill=\"#f2f4f7\" stroke=\"#d7dce4\"/>\n<rect x=\"26\" y=\"126\" width=\"2236\" height=\"28\" fill=\"#eaedf2\" stroke=\"#d7dce4\"/>\n<text x=\"38\" y=\"140\" font-size=\"12.5\" font-weight=\"600\" fill=\"#3b465c\" dominant-baseline=\"middle\">Portalen</text>",
+        "artefakter": "",
+        "noder": [
+          {
+            "id": "s1",
+            "typ": "activity",
+            "etikett": "Medarbetare behöver behörighet",
+            "svg": "<rect x=\"0\" y=\"0\" width=\"132\" height=\"54\" rx=\"10\" ry=\"10\" fill=\"#ffffff\" stroke=\"#5b6b8c\" stroke-width=\"1.6\"/>\n<g transform=\"translate(7,7) scale(0.6875)\" fill=\"none\" stroke=\"#5b6b8c\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"5\" r=\"2.6\"/><path d=\"M3 13.5c0-2.6 2.2-4 5-4s5 1.4 5 4\"/></g>\n<text x=\"66.0\" y=\"30.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2937\">Medarbetare</text>\n<text x=\"66.0\" y=\"45.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2937\">behöver behörighet</text>",
+            "x": 58,
+            "y": 50,
+            "w": 132,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#ffffff",
+              "stroke": "#5b6b8c",
+              "text": "#1f2937"
+            }
+          },
+          {
+            "id": "s2",
+            "typ": "activity",
+            "etikett": "Öppnar portalen",
+            "svg": "<rect x=\"0\" y=\"0\" width=\"132\" height=\"54\" rx=\"10\" ry=\"10\" fill=\"#ffffff\" stroke=\"#5b6b8c\" stroke-width=\"1.6\"/>\n<g transform=\"translate(7,7) scale(0.6875)\" fill=\"none\" stroke=\"#5b6b8c\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"5\" r=\"2.6\"/><path d=\"M3 13.5c0-2.6 2.2-4 5-4s5 1.4 5 4\"/></g>\n<text x=\"66.0\" y=\"38.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2937\">Öppnar portalen</text>",
+            "x": 262,
+            "y": 176,
+            "w": 132,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#ffffff",
+              "stroke": "#5b6b8c",
+              "text": "#1f2937"
+            }
+          },
+          {
+            "id": "s3",
+            "typ": "activity",
+            "etikett": "Fyller i beställningen",
+            "svg": "<rect x=\"0\" y=\"0\" width=\"132\" height=\"54\" rx=\"10\" ry=\"10\" fill=\"#ffffff\" stroke=\"#5b6b8c\" stroke-width=\"1.6\"/>\n<g transform=\"translate(7,7) scale(0.6875)\" fill=\"none\" stroke=\"#5b6b8c\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"5\" r=\"2.6\"/><path d=\"M3 13.5c0-2.6 2.2-4 5-4s5 1.4 5 4\"/></g>\n<text x=\"66.0\" y=\"30.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2937\">Fyller i</text>\n<text x=\"66.0\" y=\"45.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2937\">beställningen</text>",
+            "x": 466,
+            "y": 176,
+            "w": 132,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#ffffff",
+              "stroke": "#5b6b8c",
+              "text": "#1f2937"
+            }
+          },
+          {
+            "id": "s4",
+            "typ": "activity",
+            "etikett": "Skickar in",
+            "svg": "<rect x=\"0\" y=\"0\" width=\"132\" height=\"54\" rx=\"10\" ry=\"10\" fill=\"#ffffff\" stroke=\"#5b6b8c\" stroke-width=\"1.6\"/>\n<g transform=\"translate(7,7) scale(0.6875)\" fill=\"none\" stroke=\"#5b6b8c\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"5\" r=\"2.6\"/><path d=\"M3 13.5c0-2.6 2.2-4 5-4s5 1.4 5 4\"/></g>\n<text x=\"66.0\" y=\"38.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2937\">Skickar in</text>",
+            "x": 670,
+            "y": 176,
+            "w": 132,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#ffffff",
+              "stroke": "#5b6b8c",
+              "text": "#1f2937"
+            }
+          },
+          {
+            "id": "s5",
+            "typ": "activity",
+            "etikett": "Chefen granskar beställningen",
+            "svg": "<rect x=\"0\" y=\"0\" width=\"132\" height=\"54\" rx=\"10\" ry=\"10\" fill=\"#ffffff\" stroke=\"#5b6b8c\" stroke-width=\"1.6\"/>\n<g transform=\"translate(7,7) scale(0.6875)\" fill=\"none\" stroke=\"#5b6b8c\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"5\" r=\"2.6\"/><path d=\"M3 13.5c0-2.6 2.2-4 5-4s5 1.4 5 4\"/></g>\n<text x=\"66.0\" y=\"30.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2937\">Chefen granskar</text>\n<text x=\"66.0\" y=\"45.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2937\">beställningen</text>",
+            "x": 874,
+            "y": 176,
+            "w": 132,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#ffffff",
+              "stroke": "#5b6b8c",
+              "text": "#1f2937"
+            }
+          },
+          {
+            "id": "s6",
+            "typ": "decision",
+            "etikett": "Chefen godkänner?",
+            "svg": "<polygon points=\"56,0 112,39 56,78 0,39\" fill=\"#fff6e5\" stroke=\"#d99a2b\" stroke-width=\"1.6\"/>\n<text x=\"56\" y=\"24.96\" text-anchor=\"middle\" dominant-baseline=\"middle\" font-size=\"13.0\" font-weight=\"700\" fill=\"#d99a2b\">✕</text>\n<text x=\"56.0\" y=\"35.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#7c4a03\">Chefen</text>\n<text x=\"56.0\" y=\"50.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#7c4a03\">godkänner?</text>",
+            "x": 1078,
+            "y": 164,
+            "w": 112,
+            "h": 78,
+            "sida": 0,
+            "stil": {
+              "fill": "#fff6e5",
+              "stroke": "#d99a2b",
+              "text": "#7c4a03"
+            }
+          },
+          {
+            "id": "s7",
+            "typ": "activity",
+            "etikett": "Behörigheten läggs upp",
+            "svg": "<rect x=\"0\" y=\"0\" width=\"132\" height=\"54\" rx=\"10\" ry=\"10\" fill=\"#ffffff\" stroke=\"#5b6b8c\" stroke-width=\"1.6\"/>\n<g transform=\"translate(7,7) scale(0.6875)\" fill=\"none\" stroke=\"#5b6b8c\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"5\" r=\"2.6\"/><path d=\"M3 13.5c0-2.6 2.2-4 5-4s5 1.4 5 4\"/></g>\n<text x=\"66.0\" y=\"30.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2937\">Behörigheten läggs</text>\n<text x=\"66.0\" y=\"45.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2937\">upp</text>",
+            "x": 1282,
+            "y": 176,
+            "w": 132,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#ffffff",
+              "stroke": "#5b6b8c",
+              "text": "#1f2937"
+            }
+          },
+          {
+            "id": "s8",
+            "typ": "activity",
+            "etikett": "Bekräftelse till medarbetaren",
+            "svg": "<rect x=\"0\" y=\"0\" width=\"132\" height=\"54\" rx=\"10\" ry=\"10\" fill=\"#ffffff\" stroke=\"#5b6b8c\" stroke-width=\"1.6\"/>\n<g transform=\"translate(7,7) scale(0.6875)\" fill=\"none\" stroke=\"#5b6b8c\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"5\" r=\"2.6\"/><path d=\"M3 13.5c0-2.6 2.2-4 5-4s5 1.4 5 4\"/></g>\n<text x=\"66.0\" y=\"30.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2937\">Bekräftelse till</text>\n<text x=\"66.0\" y=\"45.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2937\">medarbetaren</text>",
+            "x": 1486,
+            "y": 176,
+            "w": 132,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#ffffff",
+              "stroke": "#5b6b8c",
+              "text": "#1f2937"
+            }
+          },
+          {
+            "id": "s9",
+            "typ": "decision",
+            "etikett": "Chefen avslår?",
+            "svg": "<polygon points=\"56,0 112,39 56,78 0,39\" fill=\"#fff6e5\" stroke=\"#d99a2b\" stroke-width=\"1.6\"/>\n<text x=\"56\" y=\"24.96\" text-anchor=\"middle\" dominant-baseline=\"middle\" font-size=\"13.0\" font-weight=\"700\" fill=\"#d99a2b\">✕</text>\n<text x=\"56.0\" y=\"35.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#7c4a03\">Chefen</text>\n<text x=\"56.0\" y=\"50.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#7c4a03\">avslår?</text>",
+            "x": 1690,
+            "y": 164,
+            "w": 112,
+            "h": 78,
+            "sida": 0,
+            "stil": {
+              "fill": "#fff6e5",
+              "stroke": "#d99a2b",
+              "text": "#7c4a03"
+            }
+          },
+          {
+            "id": "s10",
+            "typ": "activity",
+            "etikett": "Avslag till medarbetaren",
+            "svg": "<rect x=\"0\" y=\"0\" width=\"132\" height=\"54\" rx=\"10\" ry=\"10\" fill=\"#ffffff\" stroke=\"#5b6b8c\" stroke-width=\"1.6\"/>\n<g transform=\"translate(7,7) scale(0.6875)\" fill=\"none\" stroke=\"#5b6b8c\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"8\" cy=\"5\" r=\"2.6\"/><path d=\"M3 13.5c0-2.6 2.2-4 5-4s5 1.4 5 4\"/></g>\n<text x=\"66.0\" y=\"30.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2937\">Avslag till</text>\n<text x=\"66.0\" y=\"45.5\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#1f2937\">medarbetaren</text>",
+            "x": 1894,
+            "y": 176,
+            "w": 132,
+            "h": 54,
+            "sida": 0,
+            "stil": {
+              "fill": "#ffffff",
+              "stroke": "#5b6b8c",
+              "text": "#1f2937"
+            }
+          },
+          {
+            "id": "end_final",
+            "typ": "end",
+            "etikett": "Klart",
+            "svg": "<circle cx=\"30\" cy=\"30\" r=\"30\" fill=\"#fdecec\" stroke=\"#d8635f\" stroke-width=\"4.5\"/>\n\n<text x=\"30.0\" y=\"34.0\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-size=\"12.0\" fill=\"#7f1d1d\">Klart</text>",
+            "x": 2098,
+            "y": 173,
+            "w": 60,
+            "h": 60,
+            "sida": 0,
+            "stil": {
+              "fill": "#fdecec",
+              "stroke": "#d8635f",
+              "text": "#7f1d1d"
+            }
+          }
+        ],
+        "kanter": [
+          {
+            "id": "s1->s2",
+            "källa": "s1",
+            "mål": "s2",
+            "typ": "sekvens",
+            "d": "M190.0,77.0 L204.0,77.0 L204.0,162.0 L328.0,162.0 L328.0,176.0",
+            "färg": "#7b8494",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "arw"
+          },
+          {
+            "id": "s2->s3",
+            "källa": "s2",
+            "mål": "s3",
+            "typ": "sekvens",
+            "d": "M394.0,203.0 L466.0,203.0",
+            "färg": "#7b8494",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "arw"
+          },
+          {
+            "id": "s3->s4",
+            "källa": "s3",
+            "mål": "s4",
+            "typ": "sekvens",
+            "d": "M598.0,203.0 L670.0,203.0",
+            "färg": "#7b8494",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "arw"
+          },
+          {
+            "id": "s4->s5",
+            "källa": "s4",
+            "mål": "s5",
+            "typ": "sekvens",
+            "d": "M802.0,203.0 L874.0,203.0",
+            "färg": "#7b8494",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "arw"
+          },
+          {
+            "id": "s5->s6",
+            "källa": "s5",
+            "mål": "s6",
+            "typ": "sekvens",
+            "d": "M1006.0,203.0 L1078.0,203.0",
+            "färg": "#7b8494",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "arw"
+          },
+          {
+            "id": "s6->s7:Ja",
+            "källa": "s6",
+            "mål": "s7",
+            "typ": "sekvens",
+            "d": "M1190.0,203.0 L1282.0,203.0",
+            "färg": "#7b8494",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "arw",
+            "etikett": "Ja",
+            "etikettSvg": "<rect x=\"1225.5\" y=\"195.0\" width=\"21.0\" height=\"16.0\" rx=\"3.0\" fill=\"#ffffff\" stroke=\"#d7dce4\"/><text x=\"1236.0\" y=\"206.5\" text-anchor=\"middle\" font-size=\"11.0\" fill=\"#374151\">Ja</text>"
+          },
+          {
+            "id": "s7->s8",
+            "källa": "s7",
+            "mål": "s8",
+            "typ": "sekvens",
+            "d": "M1414.0,203.0 L1486.0,203.0",
+            "färg": "#7b8494",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "arw"
+          },
+          {
+            "id": "s8->s9",
+            "källa": "s8",
+            "mål": "s9",
+            "typ": "sekvens",
+            "d": "M1618.0,203.0 L1690.0,203.0",
+            "färg": "#7b8494",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "arw"
+          },
+          {
+            "id": "s6->s9:Nej",
+            "källa": "s6",
+            "mål": "s9",
+            "typ": "sekvens",
+            "d": "M1190.0,203.0 L1204.0,203.0 L1204.0,166.0 L1676.0,166.0 L1676.0,203.0 L1690.0,203.0",
+            "färg": "#7b8494",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "arw",
+            "etikett": "Nej",
+            "etikettSvg": "<rect x=\"1426.3\" y=\"158.0\" width=\"27.5\" height=\"16.0\" rx=\"3.0\" fill=\"#ffffff\" stroke=\"#d7dce4\"/><text x=\"1440.0\" y=\"169.5\" text-anchor=\"middle\" font-size=\"11.0\" fill=\"#374151\">Nej</text>"
+          },
+          {
+            "id": "s9->s10:Ja",
+            "källa": "s9",
+            "mål": "s10",
+            "typ": "sekvens",
+            "d": "M1802.0,203.0 L1894.0,203.0",
+            "färg": "#7b8494",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "arw",
+            "etikett": "Ja",
+            "etikettSvg": "<rect x=\"1837.5\" y=\"195.0\" width=\"21.0\" height=\"16.0\" rx=\"3.0\" fill=\"#ffffff\" stroke=\"#d7dce4\"/><text x=\"1848.0\" y=\"206.5\" text-anchor=\"middle\" font-size=\"11.0\" fill=\"#374151\">Ja</text>"
+          },
+          {
+            "id": "s10->end_final",
+            "källa": "s10",
+            "mål": "end_final",
+            "typ": "sekvens",
+            "d": "M2026.0,203.0 L2098.0,203.0",
+            "färg": "#7b8494",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "arw"
+          },
+          {
+            "id": "s9->end_final:Nej",
+            "källa": "s9",
+            "mål": "end_final",
+            "typ": "sekvens",
+            "d": "M1802.0,203.0 L1816.0,203.0 L1816.0,166.0 L2084.0,166.0 L2084.0,203.0 L2098.0,203.0",
+            "färg": "#7b8494",
+            "tjocklek": 1.6,
+            "pilspets": "fylld",
+            "markör": "arw",
+            "etikett": "Nej",
+            "etikettSvg": "<rect x=\"1936.3\" y=\"158.0\" width=\"27.5\" height=\"16.0\" rx=\"3.0\" fill=\"#ffffff\" stroke=\"#d7dce4\"/><text x=\"1950.0\" y=\"169.5\" text-anchor=\"middle\" font-size=\"11.0\" fill=\"#374151\">Nej</text>"
+          }
+        ],
+        "steg": {
+          "s1": {
+            "text": "Medarbetare behöver behörighet",
+            "typ": "activity",
+            "källtext": "Medarbetare behöver behörighet"
+          },
+          "s2": {
+            "text": "Öppnar portalen",
+            "typ": "activity",
+            "källtext": "Öppnar portalen"
+          },
+          "s3": {
+            "text": "Fyller i beställningen",
+            "typ": "activity",
+            "källtext": "Fyller i beställningen"
+          },
+          "s4": {
+            "text": "Skickar in",
+            "typ": "activity",
+            "källtext": "Skickar in"
+          },
+          "s5": {
+            "text": "Chefen granskar beställningen",
+            "typ": "activity",
+            "källtext": "Chefen granskar beställningen"
+          },
+          "s6": {
+            "text": "Chefen godkänner?",
+            "typ": "decision",
+            "källtext": "↓ Om chefen godkänner"
+          },
+          "s7": {
+            "text": "Behörigheten läggs upp",
+            "typ": "activity",
+            "källtext": "Behörigheten läggs upp"
+          },
+          "s8": {
+            "text": "Bekräftelse till medarbetaren",
+            "typ": "activity",
+            "källtext": "Bekräftelse till medarbetaren"
+          },
+          "s9": {
+            "text": "Chefen avslår?",
+            "typ": "decision",
+            "källtext": "↓ Om chefen avslår"
+          },
+          "s10": {
+            "text": "Avslag till medarbetaren",
+            "typ": "activity",
+            "källtext": "Avslag till medarbetaren"
+          },
+          "end_final": {
+            "text": "Klart",
+            "typ": "end"
+          }
+        },
+        "figurer": [
+          {
+            "titel": "Objekt",
+            "figurer": [
+              {
+                "nyckel": "activity",
+                "namn": "Aktivitet",
+                "betydelse": "Aktivitet – något en person utför.",
+                "antal": 8,
+                "svg": "<rect x=\"1\" y=\"3\" width=\"20\" height=\"12\" rx=\"4\" fill=\"#ffffff\" stroke=\"#5b6b8c\" stroke-width=\"1.6\"/>",
+                "w": 22,
+                "h": 18
+              },
+              {
+                "nyckel": "decision",
+                "namn": "Beslut",
+                "betydelse": "Beslut – en fråga som delar flödet. Svaren skrivs på pilarna ut ur beslutet.",
+                "antal": 2,
+                "svg": "<polygon points=\"11,1 21,9 11,17 1,9\" fill=\"#fff6e5\" stroke=\"#d99a2b\" stroke-width=\"1.6\"/>",
+                "w": 22,
+                "h": 18
+              },
+              {
+                "nyckel": "end",
+                "namn": "Slut",
+                "betydelse": "Slutpunkt – kvittensen eller det som avslutar processen.",
+                "antal": 1,
+                "svg": "<circle cx=\"11\" cy=\"9\" r=\"7\" fill=\"#fdecec\" stroke=\"#d8635f\" stroke-width=\"3\"/>",
+                "w": 22,
+                "h": 18
+              }
+            ]
+          },
+          {
+            "titel": "Kopplingar",
+            "figurer": [
+              {
+                "nyckel": "sequence",
+                "namn": "Sekvensflöde",
+                "betydelse": "Ordningen stegen utförs i. Svaret på ett beslut står på pilen.",
+                "antal": 12,
+                "svg": "<line x1=\"1\" y1=\"7\" x2=\"22\" y2=\"7\" stroke=\"#7b8494\" stroke-width=\"1.8\"/><path d=\"M21.5,3 L29,7 L21.5,11 Z\" fill=\"#7b8494\"/>",
+                "w": 30,
+                "h": 14
+              }
+            ]
+          },
+          {
+            "titel": "Bilden",
+            "figurer": [
+              {
+                "nyckel": "bana",
+                "namn": "Bana",
+                "betydelse": "Aktören eller systemet som UTFÖR stegen i bandet.",
+                "antal": 2,
+                "svg": "<rect x=\"1\" y=\"3\" width=\"20\" height=\"12\" fill=\"#fafbfc\" stroke=\"#d7dce4\" stroke-width=\"1.2\"/><rect x=\"1\" y=\"3\" width=\"5\" height=\"12\" fill=\"#eaedf2\" stroke=\"#d7dce4\" stroke-width=\"1.2\"/>",
+                "w": 22,
+                "h": 18
+              }
+            ]
+          }
+        ],
+        "revision": {
+          "version": "1.0",
+          "datum": "2026-10-22T08:00:00.000Z",
+          "status": "fastslagen",
+          "osparat": false
+        }
+      }
+    }
+  }
+}

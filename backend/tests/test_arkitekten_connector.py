@@ -245,6 +245,48 @@ class TestFetch:
             await _connector(base_url="http://x").fetch()
 
 
+class TestContract:
+    """Arkitekten's contract example (its kontrakt/flodestjanst-v1.json, copied
+    here): the flow service's real answers for its example pack."""
+
+    @staticmethod
+    def _exempel():
+        import json
+        from pathlib import Path
+
+        return json.loads(
+            (Path(__file__).parent / "fixtures" / "arkitekten-flodestjanst-v1.json").read_text("utf-8")
+        )
+
+    @pytest.mark.asyncio
+    async def test_reads_the_contract_example(self, fake_httpx):
+        ex = self._exempel()
+        scener = ex["/api/flows/{id}/scen"]
+
+        def routes(url):
+            if url.endswith("/api/flows"):
+                return FakeResponse(ex["/api/flows"])
+            fid = url.split("/api/flows/")[1].split("/")[0]
+            return FakeResponse(scener[fid])
+
+        fake_httpx(routes)
+        recs = await _connector(base_url="http://x", familj="alla").fetch()
+        by_id = {r["external_id"]: r for r in recs}
+        assert set(by_id) == set(scener)
+        for fid, rec in by_id.items():
+            assert rec["familj"] in ("affarsprocess", "flodesschema")
+            assert rec["status"] == "fastslagen"
+            assert rec["scen"]["format"] == "ark-scen"
+            assert rec["scen"]["formatVersion"] == 1
+            assert rec["bredd"] > 0 and rec["höjd"] > 0
+
+    @pytest.mark.asyncio
+    async def test_refuses_a_newer_contract(self, fake_httpx):
+        fake_httpx(lambda url: FakeResponse({"ok": True, "kontrakt": 2, "flows": [{"id": "a", "familj": "affarsprocess"}]}))
+        with pytest.raises(RuntimeError, match="contract version 2"):
+            await _connector(base_url="http://x").fetch()
+
+
 class TestFamilyNames:
     @pytest.mark.asyncio
     async def test_old_and_new_business_process_name_are_the_same_family(self, fake_httpx):

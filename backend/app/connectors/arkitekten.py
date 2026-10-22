@@ -23,6 +23,10 @@ import asyncio
 
 import httpx
 
+# The flow service contract's major version this connector understands
+# (Arkitekten's docs/gransnitt.md). A higher one is refused, not guessed at.
+KONTRAKT = 1
+
 # The business-process family. Arkitekten before 0.2 called it "2c8".
 _AFFARSPROCESS = "affarsprocess"
 _ÄLDRE_NAMN = {"2c8": _AFFARSPROCESS}
@@ -147,7 +151,14 @@ class ArkitektenConnector(BaseConnector):
         ) as client:
             resp = await client.get(f"{self._base_url()}/api/flows")
             resp.raise_for_status()
-            flows = self._unwrap(resp.json(), "flows") or []
+            index = resp.json()
+            kontrakt = index.get("kontrakt", 1) if isinstance(index, dict) else 1
+            if isinstance(kontrakt, int) and kontrakt > KONTRAKT:
+                raise RuntimeError(
+                    f"Arkitekten's flow service speaks contract version {kontrakt}; "
+                    f"this platform understands up to {KONTRAKT}. Upgrade the platform."
+                )
+            flows = self._unwrap(index, "flows") or []
 
             if familj != "alla":
                 flows = [f for f in flows if _familj(f.get("familj")) == familj]
