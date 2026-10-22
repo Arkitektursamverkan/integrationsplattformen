@@ -80,11 +80,15 @@ class SharePointConnector(BaseConnector):
             return chr(int(m.group(1), 16))
         return re.sub(r"_x([0-9a-fA-F]{4})_", _replace, name)
 
+    _SKIP_PREFIXES = ("_", "odata", "App", "Author", "Editor", "ItemChild", "FolderChild")
+    _SKIP_EXACT = {"Edit", "Attachments", "ContentType", "@odata.etag", "id"}
+
+    def _is_skipped_field(self, key: str) -> bool:
+        """Internal/metadata fields that never reach the records."""
+        return key in self._SKIP_EXACT or key.startswith(self._SKIP_PREFIXES)
+
     def _clean_fields(self, fields: dict) -> dict:
         """Clean up SharePoint fields: decode names, resolve lookups, remove metadata."""
-        skip_prefixes = ("_Compliance", "odata", "App", "Author", "Editor", "ItemChild", "FolderChild", "_UIVersion")
-        skip_exact = {"Edit", "Attachments", "ContentType", "@odata.etag", "id"}
-
         # First pass: collect resolved lookup values
         # Key by both the original display name AND a normalized no-space version
         resolved = {}
@@ -98,7 +102,7 @@ class SharePointConnector(BaseConnector):
         cleaned = {}
         for key, value in fields.items():
             # Skip internal/metadata fields
-            if key in skip_exact or key.startswith("_") or any(key.startswith(p) for p in skip_prefixes):
+            if self._is_skipped_field(key):
                 continue
 
             decoded_key = self._decode_field_name(key)
@@ -130,6 +134,23 @@ class SharePointConnector(BaseConnector):
 
         return cleaned
 
+    def _column_record_keys(self, columns: list[dict]) -> list[str]:
+        """The record key each list column ends up under after _clean_fields.
+
+        Lookup and person columns surface under their display name (resolved
+        value); everything else under the decoded internal name.
+        """
+        keys = []
+        for col in columns:
+            internal = col.get("name", "")
+            if not internal or self._is_skipped_field(internal):
+                continue
+            if "lookup" in col or "personOrGroup" in col:
+                keys.append(col.get("displayName") or internal)
+            else:
+                keys.append(self._decode_field_name(internal))
+        return keys
+
     async def _fetch_api(self) -> list[dict]:
         site_id = self.config.get("site_id", "").strip()
         list_id = self.config.get("list_id", "").strip().strip("{}")
@@ -152,11 +173,14 @@ class SharePointConnector(BaseConnector):
             lookup_columns: dict[str, dict] = {}
             all_col_map: dict[str, str] = {}  # internal_name → display_name
             person_columns: set[str] = set()  # display names of person/user columns
+            user_columns: list[dict] = []  # user-defined columns, to emit even when empty
 
             for col in columns:
                 col_display = col.get("displayName", col.get("name", ""))
                 col_internal = col.get("name", "")
                 all_col_map[col_internal] = col_display
+                if not col.get("readOnly") and not col.get("hidden"):
+                    user_columns.append(col)
 
                 lookup_info = col.get("lookup")
                 if lookup_info and lookup_info.get("listId"):
@@ -294,6 +318,11 @@ class SharePointConnector(BaseConnector):
 
             log.info("sharepoint.fetched", items=len(all_items), lookup_lists_resolved=len(lookup_cache))
 
+            # Graph omits empty fields, so a column nobody has filled in yet would
+            # never reach the records — and the pipeline editor, which derives its
+            # field list from stored records, could never offer it.
+            empty_record_keys = self._column_record_keys(user_columns)
+
             # Step 5: Process items — resolve lookups and clean fields
             records = []
             debug_first = True
@@ -324,6 +353,8 @@ class SharePointConnector(BaseConnector):
                     debug_first = False
 
                 cleaned = self._clean_fields(fields)
+                for key in empty_record_keys:
+                    cleaned.setdefault(key, None)
                 cleaned["external_id"] = str(item.get("id", ""))
                 records.append(cleaned)
             return records

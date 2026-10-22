@@ -52,6 +52,20 @@ class TestSharePointConnector:
         # Mock records should have name fields
         assert any("name" in r or "Name" in r for r in records)
 
+    def test_column_record_keys_match_cleaned_field_names(self):
+        connector = get_connector_class("sharepoint")(connection_config={}, credentials={})
+        keys = connector._column_record_keys([
+            {"name": "Title", "displayName": "Rubrik"},
+            {"name": "Komponentversion", "displayName": "Komponentversion"},
+            {"name": "Milj_x00f6_", "displayName": "Miljö"},
+            {"name": "Systemagare", "displayName": "Systemägare", "personOrGroup": {}},
+            {"name": "Leverantor", "displayName": "Leverantör", "lookup": {"listId": "x"}},
+            {"name": "ContentType", "displayName": "Content Type"},
+            {"name": "Attachments", "displayName": "Attachments"},
+            {"name": "Applikation", "displayName": "Applikation"},
+        ])
+        assert keys == ["Title", "Komponentversion", "Miljö", "Systemägare", "Leverantör"]
+
 
 class TestTwoCEightConnector:
     @pytest.mark.asyncio
