@@ -11,22 +11,25 @@ disagree. A consumer that re-derives the layout would recreate exactly that
 failure across two systems instead of two files. Arkitekten's flow service
 documents the contract.
 
-Two sources, one record shape:
-
-  * ``mode="tjanst"``  — pull from Arkitekten's read-only flow service
-    (``GET /api/flows`` + ``/api/flows/{id}/scen``). This covers whatever is
-    stored in Arkitekten's ``flows/`` directory.
-  * ``mode="2c8"``     — send a 2C8 export through the service's pure
-    transform endpoint (``POST /api/scen/2c8``) and get a scene back. The real
-    processes live in 2C8, not in Arkitekten, so this is the path that reaches
-    all of them. Combine with the ``2c8`` connector, which knows how to pull
-    vertices/edges out of the MT Backend.
+The source is Arkitekten's read-only flow service (``GET /api/flows`` +
+``/api/flows/{id}/scen``). Each flow belongs to a family: ``affarsprocess``
+(business processes, shown on the process map) or ``flodesschema`` (system
+processes, shown on an application). Older Arkitekten versions call the first
+family ``2c8``; it is read as ``affarsprocess``.
 """
 from __future__ import annotations
 
 import asyncio
 
 import httpx
+
+# The business-process family. Arkitekten before 0.2 called it "2c8".
+_AFFARSPROCESS = "affarsprocess"
+_ÄLDRE_NAMN = {"2c8": _AFFARSPROCESS}
+
+
+def _familj(värde: str | None) -> str | None:
+    return _ÄLDRE_NAMN.get(värde, värde) if värde else värde
 
 from app.connectors.base import BaseConnector
 from app.connectors.registry import register_connector
@@ -93,7 +96,7 @@ class ArkitektenConnector(BaseConnector):
         record = {
             "external_id": sammanfattning.get("id"),
             "name": sammanfattning.get("name"),
-            "familj": sammanfattning.get("familj"),
+            "familj": _familj(sammanfattning.get("familj")),
             "actor": sammanfattning.get("actor"),
             "status": sammanfattning.get("status"),
             "beteckning": sammanfattning.get("beteckning"),
@@ -102,14 +105,15 @@ class ArkitektenConnector(BaseConnector):
             "version_count": sammanfattning.get("versionCount"),
             "saved_at": sammanfattning.get("savedAt"),
         }
-        # The 2C8 prefix ("2.2.7") is the join key against EA's Process nodes,
-        # which the 2c8 sync already populates. Only present for 2C8 sources.
+        # The process number ("2.2.7") is the fallback join key against the
+        # portal's process nodes, for flows not published with a node id.
         if sammanfattning.get("prefix"):
             record["prefix"] = sammanfattning["prefix"]
         # Where the flow is published in the EA portal ("Publicera i
         # EA-portalen" in Arkitekten). `ea_nod_id` is the EA node the portal
         # attaches the flowchart to; owner and description travel with the
-        # flow because a 2C8-synced node is overwritten on every 2C8 sync.
+        # flow because a node synced from an external source is overwritten on
+        # every sync.
         publicering = sammanfattning.get("publicering")
         if isinstance(publicering, dict) and publicering.get("eaNodId"):
             record["ea_nod_id"] = publicering["eaNodId"]
@@ -130,13 +134,11 @@ class ArkitektenConnector(BaseConnector):
         mode = self.config.get("mode", "tjanst")
         if mode == "tjanst":
             return await self._fetch_tjanst()
-        if mode == "2c8":
-            return await self._fetch_2c8()
-        raise ValueError(f"Unknown mode: {mode!r} (expected 'tjanst' or '2c8')")
+        raise ValueError(f"Unknown mode: {mode!r} (expected 'tjanst')")
 
     async def _fetch_tjanst(self) -> list[dict]:
         """Pull the flow index, then a scene per flow."""
-        familj = self.config.get("familj", "2c8")
+        familj = _familj(self.config.get("familj", _AFFARSPROCESS))
         include_scene = self.config.get("include_scene", True)
         version = self.config.get("version", "fastslagen")
 
@@ -148,7 +150,7 @@ class ArkitektenConnector(BaseConnector):
             flows = self._unwrap(resp.json(), "flows") or []
 
             if familj != "alla":
-                flows = [f for f in flows if f.get("familj") == familj]
+                flows = [f for f in flows if _familj(f.get("familj")) == familj]
 
             if not flows:
                 # Empty is almost always a misconfiguration (wrong familj,
@@ -188,47 +190,6 @@ class ArkitektenConnector(BaseConnector):
 
             return list(await asyncio.gather(*(en(f) for f in flows)))
 
-    async def _fetch_2c8(self) -> list[dict]:
-        """Turn 2C8 exports into scenes via the service's pure transform.
-
-        `exports` holds raw 2C8 model extracts (vertices/edges/symbols, as
-        the 2C8 export format Arkitekten documents). Nothing is
-        read from or written to disk on either side — the endpoint is a pure
-        function from export to scene.
-        """
-        exports = self.config.get("exports") or []
-        if not exports:
-            raise ValueError(
-                "mode='2c8' requires an 'exports' list of 2C8 model extracts. "
-                "Feed it from the 2c8 connector's vertices/edges fetch."
-            )
-
-        async with httpx.AsyncClient(
-            timeout=self._timeout(), verify=self._verify_ssl()
-        ) as client:
-            gate = asyncio.Semaphore(int(self.config.get("concurrency", _DEFAULT_CONCURRENCY)))
-
-            async def en(exp: dict) -> dict:
-                async with gate:
-                    r = await client.post(f"{self._base_url()}/api/scen/2c8", json=exp)
-                    r.raise_for_status()
-                    scen = self._unwrap(r.json(), "scen")
-                    flöde = scen.get("flöde", {})
-                    return self._record(
-                        {
-                            "id": flöde.get("id"),
-                            "name": flöde.get("namn"),
-                            "familj": "2c8",
-                            "status": flöde.get("status"),
-                            "beteckning": flöde.get("beteckning"),
-                            "savedAt": flöde.get("sparad"),
-                            "prefix": (exp.get("model") or {}).get("prefix"),
-                        },
-                        scen,
-                    )
-
-            return list(await asyncio.gather(*(en(e) for e in exports)))
-
     # ── connectivity ──────────────────────────────────────────────────────
 
     async def test_connection(self) -> bool:
@@ -255,15 +216,15 @@ class ArkitektenConnector(BaseConnector):
                 },
                 "mode": {
                     "type": "string",
-                    "enum": ["tjanst", "2c8"],
+                    "enum": ["tjanst"],
                     "default": "tjanst",
-                    "description": "tjanst = pull stored flows; 2c8 = transform supplied 2C8 exports into scenes",
+                    "description": "tjanst = pull stored flows from the flow service",
                 },
                 "familj": {
                     "type": "string",
-                    "enum": ["2c8", "flodesschema", "alla"],
-                    "default": "2c8",
-                    "description": "Which family to fetch. 2c8 = processes, flodesschema = flowcharts drawn in Arkitekten.",
+                    "enum": ["affarsprocess", "flodesschema", "alla", "2c8"],
+                    "default": "affarsprocess",
+                    "description": "Which family to fetch. affarsprocess = business processes, flodesschema = system processes. '2c8' is the old name for affarsprocess.",
                 },
                 "endast_publicerade": {
                     "type": "boolean",
@@ -280,11 +241,6 @@ class ArkitektenConnector(BaseConnector):
                     "enum": ["fastslagen", "aktuell"],
                     "default": "fastslagen",
                     "description": "Which version to render. 'fastslagen' is the approved one an exported document would use.",
-                },
-                "exports": {
-                    "type": "array",
-                    "items": {"type": "object"},
-                    "description": "Raw 2C8 model extracts (only for mode=2c8)",
                 },
                 "concurrency": {
                     "type": "integer",

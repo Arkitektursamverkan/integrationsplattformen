@@ -78,7 +78,8 @@ class TestRegistration:
     def test_schema_requires_base_url(self):
         schema = get_connector_class("arkitekten").config_schema()
         assert "base_url" in schema["required"]
-        assert schema["properties"]["mode"]["enum"] == ["tjanst", "2c8"]
+        assert schema["properties"]["mode"]["enum"] == ["tjanst"]
+        assert schema["properties"]["familj"]["default"] == "affarsprocess"
 
     def test_base_url_is_required_at_runtime(self):
         with pytest.raises(ValueError, match="base_url"):
@@ -155,7 +156,7 @@ class TestFetch:
         holder = fake_httpx(routes)
         recs = await _connector(base_url="http://x").fetch()
 
-        # familj defaults to 2c8 — the portal flows are not processes.
+        # familj defaults to affarsprocess — system processes are not on the process map.
         assert [r["external_id"] for r in recs] == ["c8-a"]
         assert recs[0]["scen"] == {"bredd": 10, "höjd": 20}
         # The approved version is the default, matching what an export would use.
@@ -244,41 +245,28 @@ class TestFetch:
             await _connector(base_url="http://x").fetch()
 
 
-class TestTransformMode:
+class TestFamilyNames:
     @pytest.mark.asyncio
-    async def test_requires_exports(self):
-        with pytest.raises(ValueError, match="exports"):
-            await _connector(base_url="http://x", mode="2c8").fetch()
-
-    @pytest.mark.asyncio
-    async def test_posts_each_export_and_keeps_the_prefix(self, fake_httpx):
-        holder = fake_httpx(
+    async def test_old_and_new_business_process_name_are_the_same_family(self, fake_httpx):
+        """Arkitekten before 0.2 reported business processes as "2c8"; both
+        names must reach the portal as "affarsprocess", and a source configured
+        with the old name must keep working."""
+        fake_httpx(
             lambda url: FakeResponse(
                 {
                     "ok": True,
-                    "scen": {
-                        "bredd": 100,
-                        "höjd": 50,
-                        "flöde": {
-                            "id": "c8-2-2-7-uthyrning",
-                            "namn": "2.2.7 Uthyrning",
-                            "status": "utkast",
-                            "beteckning": "0.1",
-                            "sparad": "2026-08-28T00:00:00.000Z",
-                        },
-                    },
+                    "flows": [
+                        {"id": "c8-gammal", "familj": "2c8"},
+                        {"id": "ap-ny", "familj": "affarsprocess"},
+                        {"id": "portal-b", "familj": "flodesschema"},
+                    ],
                 }
             )
         )
-        recs = await _connector(
-            base_url="http://x",
-            mode="2c8",
-            exports=[{"model": {"prefix": "2.2.7"}, "nodes": [], "edges": []}],
-        ).fetch()
-
-        assert recs[0]["external_id"] == "c8-2-2-7-uthyrning"
-        assert recs[0]["prefix"] == "2.2.7"
-        assert holder["client"].calls[0][0] == "POST"
+        for familj in ("affarsprocess", "2c8"):
+            recs = await _connector(base_url="http://x", familj=familj, include_scene=False).fetch()
+            assert [r["external_id"] for r in recs] == ["c8-gammal", "ap-ny"]
+            assert {r["familj"] for r in recs} == {"affarsprocess"}
 
 
 class TestConnectivity:
