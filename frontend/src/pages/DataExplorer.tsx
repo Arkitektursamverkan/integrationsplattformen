@@ -6,11 +6,13 @@ import {
   Pagination, Paper, Switch, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, TableSortLabel, TextField, Tooltip, Typography,
 } from "@mui/material";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import SearchIcon from "@mui/icons-material/Search";
-import ViewColumnIcon from "@mui/icons-material/ViewColumn";
-import FullscreenIcon from "@mui/icons-material/Fullscreen";
+import {
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon,
+  Search as SearchIcon,
+  ViewColumn as ViewColumnIcon,
+  Fullscreen as FullscreenIcon,
+} from "@mui/icons-material";
 import { useDataSources, useDataRecords } from "@/api/data";
 
 export default function DataExplorer() {

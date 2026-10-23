@@ -4,9 +4,11 @@ import {
   IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   TextField, Typography,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import {
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  ContentCopy as ContentCopyIcon,
+} from "@mui/icons-material";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import client from "@/api/client";
 import { useSnackbar } from "notistack";

@@ -5,9 +5,11 @@ import {
   IconButton, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   TextField, Typography,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import DeleteIcon from "@mui/icons-material/Delete";
+import {
+  Add as AddIcon,
+  PlayArrow as PlayArrowIcon,
+  Delete as DeleteIcon,
+} from "@mui/icons-material";
 import { useFlows, useCreateFlow, useDeleteFlow, useExecuteFlow, type FlowCreate } from "@/api/flows";
 import { useConnections } from "@/api/connections";
 import StatusChip from "@/components/common/StatusChip";
