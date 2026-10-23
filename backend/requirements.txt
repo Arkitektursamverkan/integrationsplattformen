@@ -13,5 +13,5 @@ apscheduler==3.10.4
 redis==8.1.0
 bcrypt==4.2.0
 python-jose[cryptography]==3.5.0
-slowapi==0.1.9
+slowapi==0.1.10
 tenacity==9.0.0
