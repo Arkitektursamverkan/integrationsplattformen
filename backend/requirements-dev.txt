@@ -13,6 +13,6 @@
 #
 # Models that use JSONB/UUID need real PostgreSQL; those tests need a
 # throwaway postgres container rather than SQLite.
-pytest==8.3.3
-pytest-asyncio==0.24.0
+pytest==9.1.1
+pytest-asyncio==1.4.0
 aiosqlite==0.20.0
