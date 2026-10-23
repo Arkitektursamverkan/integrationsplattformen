@@ -10,7 +10,7 @@ COPY . .
 RUN npm run build
 
 # ── Runtime (nginx) ────────────────────────────────────────────────────────────
-FROM nginx:1.27-alpine AS runtime
+FROM nginx:1.29-alpine AS runtime
 
 # The release workflow passes the tag (e.g. 0.1.0).
 ARG APP_VERSION=dev
