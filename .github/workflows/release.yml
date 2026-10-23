@@ -64,7 +64,7 @@ jobs:
           labels: |
             org.opencontainers.image.licenses=EUPL-1.2
 
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.context }}
           target: runtime
