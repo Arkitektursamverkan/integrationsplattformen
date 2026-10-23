@@ -14,7 +14,7 @@ import {
   Edit as EditIcon,
   PlayArrow as PlayArrowIcon,
   ExpandMore as ExpandMoreIcon,
-  HelpOutline as HelpOutlineIcon,
+  HelpOutlineOutlined as HelpOutlineIcon,
 } from "@mui/icons-material";
 import { useConnections, useCreateConnection, useUpdateConnection, useDeleteConnection, useTestConnection, type Connection, type ConnectionCreate } from "@/api/connections";
 import StatusChip from "@/components/common/StatusChip";
@@ -28,7 +28,7 @@ function HelpPanel({ title, children }: { title: string; children: React.ReactNo
     <Accordion sx={{ bgcolor: "primary.50", "&::before": { display: "none" }, border: "1px solid", borderColor: "primary.100", borderRadius: 1 }} disableGutters>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <HelpOutlineIcon sx={{ mr: 1, color: "primary.main", fontSize: 20 }} />
-        <Typography variant="body2" fontWeight={600} color="primary.main">{title}</Typography>
+        <Typography variant="body2" sx={{ color: "primary.main", fontWeight: 600 }}>{title}</Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Typography variant="body2" component="div" sx={{ "& p": { mt: 0, mb: 1 }, "& code": { bgcolor: "grey.100", px: 0.5, borderRadius: 0.5, fontSize: 12 }, "& ol, & ul": { pl: 2, mt: 0, mb: 1 } }}>
@@ -273,13 +273,13 @@ export default function Connections() {
         }}
       >
         {csvFile ? (
-          <Typography color="success.main" fontWeight={600}>
+          <Typography sx={{ color: "success.main", fontWeight: 600 }}>
             {csvFile.name} ({(csvFile.size / 1024).toFixed(1)} KB)
           </Typography>
         ) : (
           <>
             <Typography>Click or drag a CSV file here</Typography>
-            <Typography variant="caption" color="text.secondary">Supports .csv, .tsv, .txt</Typography>
+            <Typography variant="caption" sx={{ color: "text.secondary" }}>Supports .csv, .tsv, .txt</Typography>
           </>
         )}
       </Box>
@@ -511,7 +511,7 @@ export default function Connections() {
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Alert severity="warning">Credentials are encrypted before storage and never shown in API responses.</Alert>
 
-          <Typography variant="subtitle2" color="text.secondary">Azure AD App Registration</Typography>
+          <Typography variant="subtitle2" sx={{ color: "text.secondary" }}>Azure AD App Registration</Typography>
 
           <TextField label="Tenant ID" required fullWidth autoComplete="off" value={credentialFields.tenant_id || ""}
             onChange={(e) => setCred("tenant_id", e.target.value)}
@@ -620,20 +620,20 @@ export default function Connections() {
               {connectorType !== "generic_rest" && <Chip label={mode === "mock" ? "Mock" : "Live API"} variant="outlined" size="small" />}
             </Box>
             <Typography variant="h6">{name}</Typography>
-            {description && <Typography variant="body2" color="text.secondary">{description}</Typography>}
+            {description && <Typography variant="body2" sx={{ color: "text.secondary" }}>{description}</Typography>}
 
             <Divider sx={{ my: 1 }} />
 
             {Object.entries(config).filter(([, v]) => v).map(([k, v]) => (
               <Box key={k} sx={{ display: "flex", gap: 1 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>{k}:</Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary", minWidth: 120 }}>{k}:</Typography>
                 <Typography variant="body2" sx={{ fontFamily: "monospace", wordBreak: "break-all" }}>{String(v)}</Typography>
               </Box>
             ))}
 
             <Divider sx={{ my: 1 }} />
             <Box sx={{ display: "flex", gap: 1 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>Credentials:</Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary", minWidth: 120 }}>Credentials:</Typography>
               <Typography variant="body2">{hasCreds ? "Provided (will be encrypted)" : "None"}</Typography>
             </Box>
           </CardContent>
@@ -761,7 +761,7 @@ export default function Connections() {
             onChange={(e) => setEditDescription(e.target.value)}
           />
 
-          <Divider><Typography variant="caption" color="text.secondary">Configuration</Typography></Divider>
+          <Divider><Typography variant="caption" sx={{ color: "text.secondary" }}>Configuration</Typography></Divider>
 
           {/* ── SharePoint config fields ── */}
           {editConn?.connector_type === "sharepoint" && (
@@ -877,7 +877,7 @@ export default function Connections() {
             (editConn?.connector_type === "2c8" && editConfigFields.mode === "api") ||
             (editConn?.connector_type === "generic_rest" && editConfigFields.auth_type !== "none")) && (
             <>
-              <Divider><Typography variant="caption" color="text.secondary">Credentials</Typography></Divider>
+              <Divider><Typography variant="caption" sx={{ color: "text.secondary" }}>Credentials</Typography></Divider>
               <Alert severity="info" sx={{ py: 0.5 }}>Leave fields empty to keep existing credentials. Fill in to replace.</Alert>
 
               {editConn?.connector_type === "sharepoint" && (

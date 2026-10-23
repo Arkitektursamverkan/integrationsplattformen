@@ -96,7 +96,7 @@ function FieldPicker({ label, value, onChange, fields, required, helperText }: {
         {value && !fields.includes(value) && <MenuItem value={value}>{value}</MenuItem>}
         {fields.map((f) => <MenuItem key={f} value={f}>{f}</MenuItem>)}
       </Select>
-      {helperText && <Typography variant="caption" color="text.secondary" sx={{ ml: 1.5, mt: 0.5 }}>{helperText}</Typography>}
+      {helperText && <Typography variant="caption" sx={{ color: "text.secondary", ml: 1.5, mt: 0.5 }}>{helperText}</Typography>}
     </FormControl>
   );
 }
@@ -120,7 +120,7 @@ function MultiFieldPicker({ label, value, onChange, fields, helperText }: {
       >
         {fields.map((f) => <MenuItem key={f} value={f}>{f}</MenuItem>)}
       </Select>
-      {helperText && <Typography variant="caption" color="text.secondary" sx={{ ml: 1.5, mt: 0.5 }}>{helperText}</Typography>}
+      {helperText && <Typography variant="caption" sx={{ color: "text.secondary", ml: 1.5, mt: 0.5 }}>{helperText}</Typography>}
     </FormControl>
   );
 }
@@ -313,7 +313,7 @@ function StageEditor({ stage, onChange, fields }: { stage: PipelineStage; onChan
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
           <FieldPicker label="Source field" value={String(c.field || "")} onChange={(v) => set("field", v)} fields={fields} />
           <FieldPicker label="Target field (optional)" value={String(c.target_field || "")} onChange={(v) => set("target_field", v)} fields={fields} helperText="Leave empty to overwrite the source field" />
-          <Typography variant="caption" color="text.secondary">Lookup mapping (one per line: value = replacement)</Typography>
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>Lookup mapping (one per line: value = replacement)</Typography>
           <TextField size="small" multiline rows={4} value={Object.entries((c.mapping as Record<string, string>) || {}).map(([k, v]) => `${k} = ${v}`).join("\n")} fullWidth
             placeholder={"1 = Low\n2 = Medium\n3 = High"}
             onChange={(e) => {
@@ -366,7 +366,7 @@ function StageEditor({ stage, onChange, fields }: { stage: PipelineStage; onChan
       );
 
     default:
-      return <Typography color="text.secondary">Unknown operation type</Typography>;
+      return <Typography sx={{ color: "text.secondary" }}>Unknown operation type</Typography>;
   }
 }
 
@@ -555,7 +555,7 @@ export default function FlowDetail() {
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
         <Box>
           <Typography variant="h4">{flow.name}</Typography>
-          {flow.description && <Typography color="text.secondary">{flow.description}</Typography>}
+          {flow.description && <Typography sx={{ color: "text.secondary" }}>{flow.description}</Typography>}
         </Box>
         <Box sx={{ display: "flex", gap: 1 }}>
           {hasChanges && (
@@ -598,7 +598,7 @@ export default function FlowDetail() {
       {viewMode === "visual" && (
         <Card sx={{ mb: 3, overflow: "hidden" }}>
           <Box sx={{ height: 500 }}>
-            <Suspense fallback={<Box display="flex" justifyContent="center" alignItems="center" height="100%"><Typography>Loading...</Typography></Box>}>
+            <Suspense fallback={<Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}><Typography>Loading...</Typography></Box>}>
               <FlowBuilderCanvas
                 flowId={flow.id}
                 flowName={flow.name}
@@ -648,7 +648,7 @@ export default function FlowDetail() {
                     <Typography sx={{ fontSize: 18 }}>{opDef?.icon}</Typography>
                     <Chip label={`STAGE ${i + 1}`} size="small" sx={{ bgcolor: opDef?.color || "#666", color: "white", fontWeight: 700 }} />
                     <Typography variant="subtitle2">{opDef?.label || stage.step_type}</Typography>
-                    <Typography variant="caption" color="text.secondary">{opDef?.description}</Typography>
+                    <Typography variant="caption" sx={{ color: "text.secondary" }}>{opDef?.description}</Typography>
                   </Box>
                   <Box sx={{ display: "flex", gap: 0.5 }}>
                     <IconButton size="small" onClick={() => moveStage(i, i - 1)} disabled={i === 0} title="Move up">▲</IconButton>
@@ -708,7 +708,7 @@ export default function FlowDetail() {
               View Data
             </Button>
           </Box>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block", fontFamily: "monospace" }}>
+          <Typography variant="caption" sx={{ color: "text.secondary", mt: 0.5, display: "block", fontFamily: "monospace" }}>
             API endpoint: GET /api/v1/data/{flow.id}/records
           </Typography>
         </CardContent>
@@ -724,7 +724,7 @@ export default function FlowDetail() {
       <Card sx={{ mb: 2 }}>
         <CardContent>
           {flowSchedules.length === 0 && (
-            <Typography color="text.secondary" sx={{ mb: 2 }}>No schedules configured. Add one to run this flow automatically.</Typography>
+            <Typography sx={{ color: "text.secondary", mb: 2 }}>No schedules configured. Add one to run this flow automatically.</Typography>
           )}
           {flowSchedules.map((s) => (
             <Box key={s.id} sx={{ display: "flex", alignItems: "center", gap: 2, py: 1, borderBottom: "1px solid #eee" }}>
@@ -741,16 +741,16 @@ export default function FlowDetail() {
                 sx={{ cursor: "pointer" }}
               />
               <Box sx={{ flexGrow: 1 }}>
-                <Typography variant="body2" fontWeight={600}>{describeCron(s.cron_expression) || s.cron_expression}</Typography>
-                <Typography variant="caption" color="text.secondary" fontFamily="monospace">{s.cron_expression} ({s.timezone})</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>{describeCron(s.cron_expression) || s.cron_expression}</Typography>
+                <Typography variant="caption" sx={{ color: "text.secondary", fontFamily: "monospace" }}>{s.cron_expression} ({s.timezone})</Typography>
               </Box>
               {s.last_run_at && (
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
                   Last: {new Date(s.last_run_at).toLocaleString()}
                 </Typography>
               )}
               {s.next_run_at && (
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
                   Next: {new Date(s.next_run_at).toLocaleString()}
                 </Typography>
               )}
@@ -762,7 +762,7 @@ export default function FlowDetail() {
           ))}
 
           <Divider sx={{ my: 2 }} />
-          <Typography variant="subtitle2" mb={1.5}>Add new schedule</Typography>
+          <Typography variant="subtitle2" sx={{ mb: 1.5 }}>Add new schedule</Typography>
           <CronBuilder value={newCron} onChange={setNewCron} />
           <Box sx={{ display: "flex", gap: 1, alignItems: "center", mt: 2 }}>
             <TextField
@@ -793,12 +793,12 @@ export default function FlowDetail() {
       <Card sx={{ mb: 2 }}>
         <CardContent>
           {flowWebhooks.length === 0 && (
-            <Typography color="text.secondary" sx={{ mb: 2 }}>No webhook endpoints. Create one to trigger this flow via HTTP POST.</Typography>
+            <Typography sx={{ color: "text.secondary", mb: 2 }}>No webhook endpoints. Create one to trigger this flow via HTTP POST.</Typography>
           )}
           {flowWebhooks.map((w) => (
             <Box key={w.id} sx={{ display: "flex", alignItems: "center", gap: 2, py: 1, borderBottom: "1px solid #eee" }}>
               <Chip label={w.enabled ? "Active" : "Disabled"} size="small" color={w.enabled ? "success" : "default"} />
-              <Typography variant="body2" fontFamily="monospace" sx={{ flexGrow: 1 }}>
+              <Typography variant="body2" sx={{ fontFamily: "monospace", flexGrow: 1 }}>
                 POST /api/v1/webhooks/receive/{w.path_token}
               </Typography>
               <IconButton size="small" title="Copy URL" onClick={async () => {
@@ -839,7 +839,7 @@ export default function FlowDetail() {
       </Typography>
       <Card sx={{ mb: 2 }}>
         <CardContent>
-          <Typography variant="body2" color="text.secondary" mb={2}>
+          <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
             When this flow executes successfully, send a notification to this URL.
             Use this to trigger automatic sync in the EA Application.
           </Typography>
@@ -892,7 +892,7 @@ export default function FlowDetail() {
             )}
           </Box>
           {flow.post_exec_webhook_url && (
-            <Typography variant="caption" color="success.main" sx={{ mt: 1, display: "block" }}>
+            <Typography variant="caption" sx={{ color: "success.main", mt: 1, display: "block" }}>
               Active: POST {flow.post_exec_webhook_url} will be called after each successful execution
             </Typography>
           )}
@@ -905,13 +905,13 @@ export default function FlowDetail() {
       <Card>
         <CardContent>
           {executions?.executions.length === 0 && (
-            <Typography color="text.secondary">No executions yet. Click "Execute Now" to run this flow.</Typography>
+            <Typography sx={{ color: "text.secondary" }}>No executions yet. Click "Execute Now" to run this flow.</Typography>
           )}
           {executions?.executions.map((exec) => (
             <Box key={exec.id} sx={{ display: "flex", alignItems: "center", gap: 2, py: 1, borderBottom: "1px solid #eee" }}>
               <StatusChip status={exec.status} />
               <Typography variant="body2" sx={{ minWidth: 70 }}>{exec.trigger_type}</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
+              <Typography variant="body2" sx={{ color: "text.secondary", flexGrow: 1 }}>
                 {new Date(exec.started_at).toLocaleString()}
               </Typography>
               <Typography variant="body2">

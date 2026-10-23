@@ -17,7 +17,7 @@ function StatCard({ title, value, icon, color }: { title: string; value: number 
         <Box sx={{ color, fontSize: 40, display: "flex" }}>{icon}</Box>
         <Box>
           <Typography variant="h4">{value}</Typography>
-          <Typography variant="body2" color="text.secondary">{title}</Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>{title}</Typography>
         </Box>
       </CardContent>
     </Card>
@@ -39,16 +39,16 @@ export default function Dashboard() {
       <Typography variant="h4" gutterBottom>Dashboard</Typography>
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard title="Active Connections" value={activeConnections} icon={<CableIcon fontSize="inherit" />} color="#1565c0" />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard title="Enabled Flows" value={enabledFlows} icon={<AccountTreeIcon fontSize="inherit" />} color="#7b1fa2" />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard title="Recent Successes" value={recentSuccess} icon={<CheckCircleIcon fontSize="inherit" />} color="#2e7d32" />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard title="Recent Errors" value={recentErrors} icon={<ErrorIcon fontSize="inherit" />} color="#d32f2f" />
         </Grid>
       </Grid>
@@ -57,13 +57,13 @@ export default function Dashboard() {
       <Card>
         <CardContent>
           {executions?.executions.length === 0 && (
-            <Typography color="text.secondary">No executions yet. Create a flow and run it to see results here.</Typography>
+            <Typography sx={{ color: "text.secondary" }}>No executions yet. Create a flow and run it to see results here.</Typography>
           )}
           {executions?.executions.slice(0, 10).map((exec) => (
             <Box key={exec.id} sx={{ display: "flex", alignItems: "center", gap: 2, py: 1, borderBottom: "1px solid #eee" }}>
               <StatusChip status={exec.status} />
               <Typography variant="body2" sx={{ minWidth: 80 }}>{exec.trigger_type}</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
+              <Typography variant="body2" sx={{ color: "text.secondary", flexGrow: 1 }}>
                 {new Date(exec.started_at).toLocaleString()}
               </Typography>
               <Typography variant="body2">

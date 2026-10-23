@@ -155,7 +155,7 @@ export default function CronBuilder({ value, onChange }: CronBuilderProps) {
   return (
     <Box>
       {/* Mode toggle */}
-      <Stack direction="row" spacing={1} mb={2}>
+      <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
         <Chip
           label="Quick select"
           variant={mode === "preset" ? "filled" : "outlined"}
@@ -188,7 +188,7 @@ export default function CronBuilder({ value, onChange }: CronBuilderProps) {
       )}
 
       {mode === "custom" && (
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
           <FormControl size="small" sx={{ minWidth: 140 }}>
             <InputLabel>Minute</InputLabel>
             <Select value={MINUTE_OPTIONS.some((o) => o.value === minute) ? minute : minute} label="Minute"
@@ -223,10 +223,10 @@ export default function CronBuilder({ value, onChange }: CronBuilderProps) {
       {/* Description + raw value */}
       {value && (
         <Box sx={{ mt: 1.5, display: "flex", alignItems: "center", gap: 2 }}>
-          <Typography variant="body2" color="success.main" fontWeight={500}>
+          <Typography variant="body2" sx={{ color: "success.main", fontWeight: 500 }}>
             {description || "Custom schedule"}
           </Typography>
-          <Typography variant="caption" fontFamily="monospace" color="text.secondary">
+          <Typography variant="caption" sx={{ color: "text.secondary", fontFamily: "monospace" }}>
             ({value})
           </Typography>
         </Box>

@@ -97,7 +97,7 @@ export default function CsvUpload() {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>CSV Import</Typography>
-      <Typography variant="body2" color="text.secondary" gutterBottom>
+      <Typography variant="body2" gutterBottom sx={{ color: "text.secondary" }}>
         Upload a CSV file to create a new data source. The data becomes available in the Data Explorer and Data API.
       </Typography>
 
@@ -140,7 +140,7 @@ export default function CsvUpload() {
                 ) : (
                   <>
                     <Typography>Click or drag a CSV file here</Typography>
-                    <Typography variant="caption" color="text.secondary">Supports .csv, .tsv, .txt</Typography>
+                    <Typography variant="caption" sx={{ color: "text.secondary" }}>Supports .csv, .tsv, .txt</Typography>
                   </>
                 )}
               </Box>
@@ -194,7 +194,7 @@ export default function CsvUpload() {
               </Button>
             </Box>
 
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            <Typography variant="subtitle2" gutterBottom sx={{ color: "text.secondary" }}>
               Columns: {preview.columns.map((c) => c.name).join(", ")}
             </Typography>
 
@@ -226,7 +226,7 @@ export default function CsvUpload() {
             </TableContainer>
 
             {preview.total_rows > 10 && (
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+              <Typography variant="caption" sx={{ color: "text.secondary", mt: 1, display: "block" }}>
                 Showing first 10 of {preview.total_rows} rows
               </Typography>
             )}

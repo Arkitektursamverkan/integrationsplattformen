@@ -43,9 +43,9 @@ export const SourceNode = memo(({ data }: NodeProps) => {
         <CloudDownloadIcon sx={{ color: "#1565c0", fontSize: 20 }} />
         <Chip label="SOURCE" size="small" sx={{ bgcolor: "#1565c0", color: "#fff", fontWeight: 700, fontSize: 10, height: 20 }} />
       </Box>
-      <Typography variant="subtitle2" fontWeight={600}>{d.label || "Data Source"}</Typography>
+      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{d.label || "Data Source"}</Typography>
       {d.connectionName && (
-        <Typography variant="caption" color="text.secondary" display="block">
+        <Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
           {d.connectionName} {d.connectorType ? `(${d.connectorType})` : ""}
         </Typography>
       )}
@@ -78,10 +78,10 @@ export const TransformNode = memo(({ data }: NodeProps) => {
           sx={{ bgcolor: "#e65100", color: "#fff", fontWeight: 700, fontSize: 10, height: 20 }}
         />
         {d.stageIndex != null && (
-          <Typography variant="caption" color="text.secondary">Stage {d.stageIndex + 1}</Typography>
+          <Typography variant="caption" sx={{ color: "text.secondary" }}>Stage {d.stageIndex + 1}</Typography>
         )}
       </Box>
-      <Typography variant="subtitle2" fontWeight={600}>{d.label || "Transform"}</Typography>
+      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{d.label || "Transform"}</Typography>
     </Box>
   );
 });
@@ -108,7 +108,7 @@ export const StoreNode = memo(({ data }: NodeProps) => {
           <Chip label={`${d.recordCount} records`} size="small" variant="outlined" sx={{ fontSize: 10, height: 20 }} />
         )}
       </Box>
-      <Typography variant="subtitle2" fontWeight={600}>{d.label || "Data Store"}</Typography>
+      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{d.label || "Data Store"}</Typography>
     </Box>
   );
 });
@@ -131,9 +131,9 @@ export const EndpointNode = memo(({ data }: NodeProps) => {
         <ApiIcon sx={{ color: "#7b1fa2", fontSize: 20 }} />
         <Chip label="API ENDPOINT" size="small" sx={{ bgcolor: "#7b1fa2", color: "#fff", fontWeight: 700, fontSize: 10, height: 20 }} />
       </Box>
-      <Typography variant="subtitle2" fontWeight={600}>{d.label || "Data API"}</Typography>
+      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{d.label || "Data API"}</Typography>
       {d.apiUrl && (
-        <Typography variant="caption" fontFamily="monospace" color="text.secondary" display="block" sx={{ mt: 0.5, wordBreak: "break-all" }}>
+        <Typography variant="caption" sx={{ color: "text.secondary", fontFamily: "monospace", display: "block", mt: 0.5, wordBreak: "break-all" }}>
           {d.apiUrl}
         </Typography>
       )}
