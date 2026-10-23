@@ -26,12 +26,12 @@ export default function Schedules() {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>Schedules</Typography>
-      <Typography variant="body2" color="text.secondary" mb={3}>
+      <Typography variant="body2" sx={{ color: "text.secondary", mb: 3 }}>
         Overview of all scheduled flow executions. Toggle schedules on/off or run flows manually.
       </Typography>
 
       {/* Stats */}
-      <Stack direction="row" spacing={2} mb={3}>
+      <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
         <Chip label={`${(schedules || []).length} total`} variant="outlined" />
         <Chip label={`${active} active`} color="success" size="small" />
         {paused > 0 && <Chip label={`${paused} paused`} color="default" size="small" />}
@@ -42,7 +42,7 @@ export default function Schedules() {
       ) : !schedules?.length ? (
         <Card>
           <CardContent>
-            <Typography color="text.secondary">
+            <Typography sx={{ color: "text.secondary" }}>
               No schedules configured yet. Go to a Flow's detail page to add a schedule.
             </Typography>
           </CardContent>
@@ -84,25 +84,24 @@ export default function Schedules() {
                     <TableCell>
                       <Typography
                         variant="body2"
-                        fontWeight={600}
-                        sx={{ cursor: "pointer", "&:hover": { textDecoration: "underline" } }}
+                        sx={{ fontWeight: 600, cursor: "pointer", "&:hover": { textDecoration: "underline" } }}
                         onClick={() => navigate(`/flows/${s.flow_id}`)}
                       >
                         {flow?.name || s.flow_id.slice(0, 8)}
                       </Typography>
                       {flow && (
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" sx={{ color: "text.secondary" }}>
                           {flow.enabled ? "Enabled" : "Disabled"}
                         </Typography>
                       )}
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" fontWeight={500}>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
                         {describeCron(s.cron_expression) || s.cron_expression}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption" fontFamily="monospace">{s.cron_expression}</Typography>
+                      <Typography variant="caption" sx={{ fontFamily: "monospace" }}>{s.cron_expression}</Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="caption">{s.timezone}</Typography>
@@ -111,14 +110,14 @@ export default function Schedules() {
                       {s.last_run_at ? (
                         <Typography variant="caption">{new Date(s.last_run_at).toLocaleString()}</Typography>
                       ) : (
-                        <Typography variant="caption" color="text.secondary">Never</Typography>
+                        <Typography variant="caption" sx={{ color: "text.secondary" }}>Never</Typography>
                       )}
                     </TableCell>
                     <TableCell>
                       {s.next_run_at ? (
                         <Typography variant="caption">{new Date(s.next_run_at).toLocaleString()}</Typography>
                       ) : (
-                        <Typography variant="caption" color="text.secondary">—</Typography>
+                        <Typography variant="caption" sx={{ color: "text.secondary" }}>—</Typography>
                       )}
                     </TableCell>
                     <TableCell align="right">

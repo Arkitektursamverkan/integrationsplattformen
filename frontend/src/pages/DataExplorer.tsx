@@ -164,7 +164,7 @@ export default function DataExplorer() {
             <TextField
               size="small" placeholder="Search all fields..."
               value={searchText} onChange={(e) => setSearchText(e.target.value)}
-              InputProps={{ startAdornment: <SearchIcon sx={{ mr: 0.5, color: "text.secondary" }} /> }}
+              slotProps={{ input: { startAdornment: <SearchIcon sx={{ mr: 0.5, color: "text.secondary" }} /> } }}
               sx={{ minWidth: 250 }}
             />
             <Button
@@ -194,7 +194,7 @@ export default function DataExplorer() {
       {!selectedFlow && (
         <Card>
           <CardContent>
-            <Typography color="text.secondary" gutterBottom>Select a data source to browse records.</Typography>
+            <Typography gutterBottom sx={{ color: "text.secondary" }}>Select a data source to browse records.</Typography>
             {sources && sources.length > 0 && (
               <Box sx={{ mt: 2 }}>
                 {sources.map((s) => (
@@ -281,7 +281,7 @@ export default function DataExplorer() {
                 {processedRecords.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={visibleColumns.length + 2}>
-                      <Typography color="text.secondary" align="center">
+                      <Typography align="center" sx={{ color: "text.secondary" }}>
                         {searchText ? "No records match your search." : "No records."}
                       </Typography>
                     </TableCell>
@@ -359,7 +359,7 @@ export default function DataExplorer() {
                 </Box>
                 <Checkbox size="small" checked={!hiddenColumns.has(col)} onChange={() => toggleColumn(col)} />
                 <Typography variant="body2" sx={{ flexGrow: 1 }}>{col}</Typography>
-                <Typography variant="caption" color="text.disabled">{i + 1}</Typography>
+                <Typography variant="caption" sx={{ color: "text.disabled" }}>{i + 1}</Typography>
               </Box>
             ));
           })()}

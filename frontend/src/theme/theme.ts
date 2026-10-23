@@ -17,5 +17,9 @@ export const theme = createTheme({
     MuiCard: {
       defaultProps: { elevation: 1 },
     },
+    // MUI 9 räknar ikonens minsta bredd med theme.spacing (36 px); behåll 56 px.
+    MuiListItemIcon: {
+      styleOverrides: { root: { minWidth: 56 } },
+    },
   },
 });

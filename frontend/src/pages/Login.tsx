@@ -27,7 +27,7 @@ export default function Login() {
       <Card sx={{ maxWidth: 400, width: "100%" }}>
         <CardContent sx={{ p: 4 }}>
           <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>Integration Platform</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>Sign in to manage your integrations</Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary", mb: 3 }}>Sign in to manage your integrations</Typography>
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 

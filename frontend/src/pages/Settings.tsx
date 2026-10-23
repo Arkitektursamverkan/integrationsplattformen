@@ -168,7 +168,7 @@ export default function Settings() {
             />
           ) : (
             <Box>
-              <Typography variant="body2" color="warning.main" gutterBottom>
+              <Typography variant="body2" gutterBottom sx={{ color: "warning.main" }}>
                 Copy this key now — it will not be shown again.
               </Typography>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1, p: 1, bgcolor: "grey.100", borderRadius: 1 }}>
