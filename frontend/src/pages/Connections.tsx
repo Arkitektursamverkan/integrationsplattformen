@@ -8,12 +8,14 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   TextField, Typography,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import {
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  PlayArrow as PlayArrowIcon,
+  ExpandMore as ExpandMoreIcon,
+  HelpOutline as HelpOutlineIcon,
+} from "@mui/icons-material";
 import { useConnections, useCreateConnection, useUpdateConnection, useDeleteConnection, useTestConnection, type Connection, type ConnectionCreate } from "@/api/connections";
 import StatusChip from "@/components/common/StatusChip";
 import { useSnackbar } from "notistack";

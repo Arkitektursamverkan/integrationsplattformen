@@ -1,10 +1,12 @@
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { Box, Chip, Typography } from "@mui/material";
-import StorageIcon from "@mui/icons-material/Storage";
-import TransformIcon from "@mui/icons-material/Transform";
-import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
-import ApiIcon from "@mui/icons-material/Api";
+import {
+  Storage as StorageIcon,
+  Transform as TransformIcon,
+  CloudDownload as CloudDownloadIcon,
+  Api as ApiIcon,
+} from "@mui/icons-material";
 
 // ── Shared styles ───────────────────────────────────────────────────────────
 

@@ -5,18 +5,20 @@ import {
   FormControlLabel, IconButton, InputLabel, MenuItem, Select, Table, TableBody,
   TableCell, TableHead, TableRow, TextField, Typography,
 } from "@mui/material";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
-import SaveIcon from "@mui/icons-material/Save";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import ScheduleIcon from "@mui/icons-material/Schedule";
+import {
+  PlayArrow as PlayArrowIcon,
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Save as SaveIcon,
+  ArrowDownward as ArrowDownwardIcon,
+  DragIndicator as DragIndicatorIcon,
+  Schedule as ScheduleIcon,
+  Webhook as WebhookIcon,
+  ContentCopy as ContentCopyIcon,
+  ViewList as ViewListIcon,
+  AccountTree as AccountTreeIcon,
+} from "@mui/icons-material";
 import CronBuilder, { describeCron } from "@/components/common/CronBuilder";
-import WebhookIcon from "@mui/icons-material/Webhook";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import ViewListIcon from "@mui/icons-material/ViewList";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
 
 const FlowBuilderCanvas = lazy(() => import("@/components/flow-builder/FlowBuilder"));
 import { useFlow, useExecuteFlow, useUpdateFlow } from "@/api/flows";

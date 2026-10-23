@@ -4,9 +4,11 @@ import {
   MenuItem, Paper, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, TextField, Typography,
 } from "@mui/material";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import {
+  UploadFile as UploadFileIcon,
+  CloudUpload as CloudUploadIcon,
+  CheckCircle as CheckCircleIcon,
+} from "@mui/icons-material";
 import { useSnackbar } from "notistack";
 import client from "@/api/client";
 

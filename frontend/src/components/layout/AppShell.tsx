@@ -13,16 +13,18 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
-import LogoutIcon from "@mui/icons-material/Logout";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import CableIcon from "@mui/icons-material/Cable";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import HistoryIcon from "@mui/icons-material/History";
-import StorageIcon from "@mui/icons-material/Storage";
-import SettingsIcon from "@mui/icons-material/Settings";
-import ScheduleIcon from "@mui/icons-material/Schedule";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
+import {
+  Menu as MenuIcon,
+  Logout as LogoutIcon,
+  Dashboard as DashboardIcon,
+  Cable as CableIcon,
+  AccountTree as AccountTreeIcon,
+  History as HistoryIcon,
+  Storage as StorageIcon,
+  Settings as SettingsIcon,
+  Schedule as ScheduleIcon,
+  UploadFile as UploadFileIcon,
+} from "@mui/icons-material";
 
 const DRAWER_WIDTH = 240;
 

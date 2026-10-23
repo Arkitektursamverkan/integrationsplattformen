@@ -1,8 +1,10 @@
 import { Box, Card, CardContent, Grid, Typography } from "@mui/material";
-import CableIcon from "@mui/icons-material/Cable";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ErrorIcon from "@mui/icons-material/Error";
+import {
+  Cable as CableIcon,
+  AccountTree as AccountTreeIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
+} from "@mui/icons-material";
 import { useConnections } from "@/api/connections";
 import { useFlows } from "@/api/flows";
 import { useExecutions } from "@/api/executions";

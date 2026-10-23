@@ -1,6 +1,8 @@
 import { Box, Card, CardContent, Chip, IconButton, Stack, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import {
+  Delete as DeleteIcon,
+  PlayArrow as PlayArrowIcon,
+} from "@mui/icons-material";
 import { useSchedules, useDeleteSchedule, useUpdateSchedule } from "@/api/schedules";
 import { useFlows, useExecuteFlow } from "@/api/flows";
 import { useNavigate } from "react-router-dom";
