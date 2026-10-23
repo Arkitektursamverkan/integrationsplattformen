@@ -32,7 +32,7 @@ jobs:
             context: frontend
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Version from tag
         id: version
@@ -82,7 +82,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Create release with generated notes
         env:
           GH_TOKEN: ${{ github.token }}
