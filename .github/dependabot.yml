@@ -17,6 +17,10 @@ updates:
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 5
+    ignore:
+      # Typerna följer Node-versionen i avbilden (24, LTS), inte den senaste.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       sma-uppdateringar:
         update-types: ["minor", "patch"]
