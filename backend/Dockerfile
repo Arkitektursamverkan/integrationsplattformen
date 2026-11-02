@@ -1,5 +1,5 @@
 # ── Builder ────────────────────────────────────────────────────────────────────
-FROM python:3.11-slim AS builder
+FROM python:3.14-slim AS builder
 
 WORKDIR /build
 
@@ -8,7 +8,7 @@ RUN pip install --upgrade pip \
     && pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # ── Runtime ────────────────────────────────────────────────────────────────────
-FROM python:3.11-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 # The release workflow passes the tag (e.g. 0.1.0).
 ARG APP_VERSION=dev
