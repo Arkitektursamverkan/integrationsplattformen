@@ -2,12 +2,14 @@
 # paketsystem: varje pull request kör CI, och Actions-minuterna är begränsade.
 # Nya huvudversioner kommer var för sig. Säkerhetsuppdateringar kommer som
 # förut, direkt.
+# Inga automatiska rebaser: varje rebase kör CI igen. Vid konflikt: "@dependabot rebase".
 version: 2
 updates:
   - package-ecosystem: "pip"
     directory: "/backend"
     schedule:
       interval: "monthly"
+    rebase-strategy: "disabled"
     open-pull-requests-limit: 5
     groups:
       sma-uppdateringar:
@@ -16,9 +18,10 @@ updates:
     directory: "/frontend"
     schedule:
       interval: "monthly"
+    rebase-strategy: "disabled"
     open-pull-requests-limit: 5
     ignore:
-      # Typerna följer Node-versionen i avbilden (24, LTS), inte den senaste.
+      # Typerna följer Node-versionen i avbilden (26, LTS), inte den senaste.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
     groups:
@@ -28,6 +31,7 @@ updates:
     directory: "/mcp-server"
     schedule:
       interval: "monthly"
+    rebase-strategy: "disabled"
     open-pull-requests-limit: 5
     groups:
       sma-uppdateringar:
@@ -36,6 +40,7 @@ updates:
     directory: "/backend"
     schedule:
       interval: "monthly"
+    rebase-strategy: "disabled"
     open-pull-requests-limit: 5
     groups:
       sma-uppdateringar:
@@ -44,6 +49,7 @@ updates:
     directory: "/frontend"
     schedule:
       interval: "monthly"
+    rebase-strategy: "disabled"
     open-pull-requests-limit: 5
     groups:
       sma-uppdateringar:
@@ -56,6 +62,7 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    rebase-strategy: "disabled"
     open-pull-requests-limit: 5
     groups:
       sma-uppdateringar:
