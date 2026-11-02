@@ -7,6 +7,10 @@ funktioner, en ny korrigering för rättelser.
 
 ## Ej släppt
 
+- (inget än)
+
+## 0.2.3 – 2026-11-02
+
 - Backend på Python 3.14 och webbens bygge på Node 26 (LTS).
 
 ## 0.2.2 – 2026-11-02
