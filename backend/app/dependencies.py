@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Annotated
 
-import bcrypt
 from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
@@ -15,7 +14,7 @@ from app.config import settings
 from app.database import get_db
 from app.models.api_key import ApiKeyORM
 from app.models.user import UserORM
-from app.services.auth_service import decode_token
+from app.services.auth_service import decode_token, verify_password
 
 # Optional bearer token — doesn't auto-reject if missing
 _bearer_scheme = HTTPBearer(auto_error=False)
@@ -148,7 +147,7 @@ async def require_data_access(
             select(ApiKeyORM).where(ApiKeyORM.key_prefix == prefix, ApiKeyORM.enabled.is_(True))
         )
         api_key = result.scalar_one_or_none()
-        if api_key and bcrypt.checkpw(x_api_key.encode(), api_key.key_hash.encode()):
+        if api_key and verify_password(x_api_key, api_key.key_hash):
             if api_key.expires_at and api_key.expires_at < datetime.now(timezone.utc):
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="API key expired")
             return api_key

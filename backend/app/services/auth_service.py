@@ -10,12 +10,26 @@ from jose import jwt
 from app.config import settings
 
 
+# bcrypt reads at most 72 bytes. Up to version 4 it cut the rest off itself;
+# from 5 it refuses longer input, so the cut is made here – existing hashes
+# were made from the first 72 bytes and keep working.
+_BCRYPT_MAX_BYTES = 72
+
+
+def _bcrypt_bytes(secret: str) -> bytes:
+    return secret.encode()[:_BCRYPT_MAX_BYTES]
+
+
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    return bcrypt.hashpw(_bcrypt_bytes(password), bcrypt.gensalt()).decode()
 
 
 def verify_password(password: str, password_hash: str) -> bool:
-    return bcrypt.checkpw(password.encode(), password_hash.encode())
+    try:
+        return bcrypt.checkpw(_bcrypt_bytes(password), password_hash.encode())
+    except ValueError:
+        # Not a bcrypt hash at all.
+        return False
 
 
 def create_access_token(user_id: str, username: str, role: str) -> str:

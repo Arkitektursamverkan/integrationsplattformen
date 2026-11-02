@@ -4,7 +4,6 @@ from __future__ import annotations
 import secrets
 import uuid
 
-import bcrypt
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +12,7 @@ from app.database import get_db
 from app.dependencies import require_admin_key
 from app.models.api_key import ApiKeyORM
 from app.schemas.auth import ApiKeyCreate, ApiKeyCreated, ApiKeyRead
+from app.services.auth_service import hash_password
 
 router = APIRouter()
 
@@ -28,7 +28,7 @@ async def create_api_key(body: ApiKeyCreate, db: AsyncSession = Depends(get_db))
     # Generate a random API key
     raw_key = secrets.token_urlsafe(32)
     prefix = raw_key[:8]
-    key_hash = bcrypt.hashpw(raw_key.encode(), bcrypt.gensalt()).decode()
+    key_hash = hash_password(raw_key)
 
     api_key = ApiKeyORM(
         id=uuid.uuid4(),
