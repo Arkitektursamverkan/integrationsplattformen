@@ -1,6 +1,7 @@
 """Application configuration loaded from environment variables."""
 from __future__ import annotations
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,11 +16,33 @@ _PLACEHOLDER_SECRETS = {
 }
 
 
+def asyncpg_url(raw: str) -> str:
+    """A PostgreSQL URL in the form SQLAlchemy's asyncpg driver needs.
+
+    Managed databases (Render, Heroku and others) hand out ``postgres://`` or
+    ``postgresql://``; asyncpg also spells TLS ``ssl=`` where libpq says
+    ``sslmode=``. Anything else is left untouched."""
+    value = raw.strip()
+    for prefix in ("postgres://", "postgresql://"):
+        if value.startswith(prefix):
+            value = "postgresql+asyncpg://" + value[len(prefix):]
+            break
+    if value.startswith("postgresql+asyncpg://") and "sslmode=" in value:
+        value = value.replace("sslmode=", "ssl=")
+    return value
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # ── Database ─────────────────────────────────────────────────────────────
     DATABASE_URL: str = "postgresql+asyncpg://integration_user:integration_pass@localhost:5433/integration_db"
+
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def normalise_database_url(cls, v: str) -> str:
+        # A managed database's own connection string works as it is given.
+        return asyncpg_url(v)
 
     # ── Redis ────────────────────────────────────────────────────────────────
     REDIS_URL: str = "redis://localhost:6380/0"

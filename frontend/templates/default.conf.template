@@ -1,5 +1,6 @@
 server {
-    listen 80;
+    # PORT (default 80) is set by a platform such as Render.
+    listen ${PORT};
     server_name _;
     root /usr/share/nginx/html;
     index index.html;
@@ -16,8 +17,16 @@ server {
     # Proxy /api to the FastAPI backend. API_UPSTREAM (default api:8000) is
     # filled in when the container starts, so the platform can run next to
     # Arkitekturportalen in one compose project under another service name.
+    #
+    # The address is looked up again every 10 s, not once at start: on a
+    # platform such as Render a redeployed API gets a new address, and nginx
+    # would otherwise keep sending to the old one until it restarts. The
+    # resolvers are the container's own (NGINX_ENTRYPOINT_LOCAL_RESOLVERS).
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;
+
     location /api {
-        proxy_pass http://${API_UPSTREAM};
+        set $api_upstream http://${API_UPSTREAM};
+        proxy_pass $api_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
