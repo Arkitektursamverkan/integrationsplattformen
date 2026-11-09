@@ -122,6 +122,9 @@ class Settings(BaseSettings):
     # 8200). Satt = plattformen skapar vid starten källan som hämtar de
     # publicerade processbilderna, om ingen sådan källa finns. Tomt = inget.
     ARKITEKTEN_URL: str = ""
+    # Arkitektens flödestjänst kräver den här nyckeln (huvudet
+    # X-Arkitekten-Nyckel) när den har en – samma värde som där. Tomt = ingen.
+    ARK_FLODESTJANST_NYCKEL: str = ""
 
 
 settings = Settings()

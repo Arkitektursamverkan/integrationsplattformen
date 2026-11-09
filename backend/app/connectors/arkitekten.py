@@ -35,6 +35,7 @@ _ÄLDRE_NAMN = {"2c8": _AFFARSPROCESS}
 def _familj(värde: str | None) -> str | None:
     return _ÄLDRE_NAMN.get(värde, värde) if värde else värde
 
+from app.config import settings
 from app.connectors.base import BaseConnector
 from app.connectors.registry import register_connector
 
@@ -57,6 +58,13 @@ class ArkitektenConnector(BaseConnector):
         if not url:
             raise ValueError("base_url is required (e.g. http://arkitekten.example.org:8200)")
         return url
+
+    @staticmethod
+    def _headers() -> dict[str, str]:
+        """Arkitektens flödestjänst kräver nyckeln när installationen har en
+        (ARK_FLODESTJANST_NYCKEL, samma värde på båda sidor)."""
+        nyckel = settings.ARK_FLODESTJANST_NYCKEL.strip()
+        return {"X-Arkitekten-Nyckel": nyckel} if nyckel else {}
 
     def _timeout(self) -> float:
         return float(self.config.get("timeout", _DEFAULT_TIMEOUT))
@@ -147,7 +155,7 @@ class ArkitektenConnector(BaseConnector):
         version = self.config.get("version", "fastslagen")
 
         async with httpx.AsyncClient(
-            timeout=self._timeout(), verify=self._verify_ssl()
+            timeout=self._timeout(), verify=self._verify_ssl(), headers=self._headers()
         ) as client:
             resp = await client.get(f"{self._base_url()}/api/flows")
             resp.raise_for_status()
@@ -206,9 +214,11 @@ class ArkitektenConnector(BaseConnector):
     async def test_connection(self) -> bool:
         try:
             async with httpx.AsyncClient(
-                timeout=10.0, verify=self._verify_ssl()
+                timeout=10.0, verify=self._verify_ssl(), headers=self._headers()
             ) as client:
-                resp = await client.get(f"{self._base_url()}/health")
+                # /api/flows, inte /health: /health är öppen och säger inget om
+                # att nyckeln stämmer.
+                resp = await client.get(f"{self._base_url()}/api/flows")
                 return resp.status_code == 200 and bool(resp.json().get("ok"))
         except Exception:
             return False
