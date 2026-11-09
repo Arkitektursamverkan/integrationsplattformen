@@ -1,16 +1,19 @@
 """Webhook endpoints — CRUD management + incoming payload receiver."""
 from __future__ import annotations
 
+import hmac
 import secrets
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dependencies import require_admin_key
 from app.models.webhook_endpoint import WebhookEndpointORM
+from app.ratelimit import limiter
 from app.schemas.webhook import WebhookEndpointCreate, WebhookEndpointRead
 
 router = APIRouter()
@@ -84,9 +87,11 @@ async def delete_webhook(webhook_id: uuid.UUID, db: AsyncSession = Depends(get_d
 
 
 @router.post("/receive/{path_token}")
+@limiter.limit("60/minute")
 async def receive_webhook(
     path_token: str,
     request: Request,
+    x_webhook_secret: Annotated[str | None, Header()] = None,
     db: AsyncSession = Depends(get_db),
 ):
     # Look up webhook endpoint
@@ -99,6 +104,12 @@ async def receive_webhook(
     endpoint = result.scalar_one_or_none()
     if not endpoint:
         raise HTTPException(status_code=404, detail="Webhook endpoint not found")
+
+    # An endpoint with a secret only answers callers that send it.
+    if endpoint.secret and not hmac.compare_digest(
+        (x_webhook_secret or "").encode(), endpoint.secret.encode()
+    ):
+        raise HTTPException(status_code=401, detail="Wrong or missing X-Webhook-Secret")
 
     # Parse payload
     try:

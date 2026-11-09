@@ -20,6 +20,7 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
-    sourcemap: true,
+    // No source maps in the served build.
+    sourcemap: false,
   },
 });

@@ -1,6 +1,7 @@
 """FastAPI dependency injection: database sessions and authentication."""
 from __future__ import annotations
 
+import hmac
 from datetime import datetime, timezone
 from typing import Annotated
 
@@ -18,6 +19,11 @@ from app.services.auth_service import decode_token, verify_password
 
 # Optional bearer token — doesn't auto-reject if missing
 _bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def _is_admin_key(x_api_key: str | None) -> bool:
+    """Constant-time comparison with the admin key."""
+    return bool(x_api_key) and hmac.compare_digest(x_api_key.encode(), settings.ADMIN_API_KEY.encode())
 
 
 # ── JWT authentication (for UI users) ────────────────────────────────────────
@@ -66,7 +72,7 @@ async def require_auth(
     This allows both the UI (JWT) and MCP server/scripts (API key) to work.
     """
     # Try admin API key first
-    if x_api_key and x_api_key == settings.ADMIN_API_KEY:
+    if _is_admin_key(x_api_key):
         return None  # Admin key accepted, no user object
 
     # Try JWT token
@@ -94,7 +100,7 @@ async def require_admin_auth(
 ) -> UserORM | None:
     """Require admin API key or admin-role JWT token."""
     # Admin API key
-    if x_api_key and x_api_key == settings.ADMIN_API_KEY:
+    if _is_admin_key(x_api_key):
         return None
 
     # JWT with admin role
@@ -123,7 +129,7 @@ async def require_data_access(
 ) -> ApiKeyORM | UserORM | None:
     """Accept admin API key, JWT token, or consumer API key for data endpoints."""
     # Admin API key
-    if x_api_key and x_api_key == settings.ADMIN_API_KEY:
+    if _is_admin_key(x_api_key):
         return None
 
     # JWT token (any role can read data)
@@ -146,11 +152,15 @@ async def require_data_access(
         result = await db.execute(
             select(ApiKeyORM).where(ApiKeyORM.key_prefix == prefix, ApiKeyORM.enabled.is_(True))
         )
-        api_key = result.scalar_one_or_none()
-        if api_key and verify_password(x_api_key, api_key.key_hash):
-            if api_key.expires_at and api_key.expires_at < datetime.now(timezone.utc):
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="API key expired")
-            return api_key
+        # Prefixes are not unique: try each key that shares it.
+        for api_key in result.scalars().all():
+            if verify_password(x_api_key, api_key.key_hash):
+                expires_at = api_key.expires_at
+                if expires_at and expires_at.tzinfo is None:
+                    expires_at = expires_at.replace(tzinfo=timezone.utc)
+                if expires_at and expires_at < datetime.now(timezone.utc):
+                    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="API key expired")
+                return api_key
 
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
 

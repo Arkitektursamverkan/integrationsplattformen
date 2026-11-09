@@ -27,8 +27,6 @@ COPY app/ ./app/
 COPY seed/ ./seed/
 COPY alembic/ ./alembic/
 COPY alembic.ini .
-COPY tests/ ./tests/
-COPY pytest.ini .
 
 # Non-root user for security
 RUN useradd -m -u 1001 appuser && chown -R appuser /app

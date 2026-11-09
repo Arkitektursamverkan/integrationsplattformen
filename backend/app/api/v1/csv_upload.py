@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.csv_connector import parse_csv
 from app.database import get_db
-from app.dependencies import require_auth
+from app.dependencies import require_admin_auth, require_auth
 from app.models.connection import ConnectionORM
 from app.models.data_record import DataRecordORM
 from app.models.execution_log import ExecutionLogORM
@@ -24,6 +24,25 @@ from app.models.flow_step import FlowStepORM
 log = structlog.get_logger(__name__)
 
 router = APIRouter()
+
+# Larger files are refused (413) – the whole file is parsed in memory.
+MAX_UPLOAD_BYTES = 20 * 1024 * 1024
+_CHUNK = 1024 * 1024
+
+
+async def _read_limited(file: UploadFile) -> bytes:
+    """The uploaded file, read in chunks and refused above MAX_UPLOAD_BYTES."""
+    chunks: list[bytes] = []
+    size = 0
+    while chunk := await file.read(_CHUNK):
+        size += len(chunk)
+        if size > MAX_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large (max {MAX_UPLOAD_BYTES // (1024 * 1024)} MB)",
+            )
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 def _checksum(data: dict) -> str:
@@ -36,7 +55,7 @@ async def preview_csv(
     delimiter: str = Form("auto"),
 ):
     """Preview a CSV file: parse and return the first rows and detected columns."""
-    content = await file.read()
+    content = await _read_limited(file)
     try:
         records = parse_csv(content, delimiter=delimiter)
     except Exception as e:
@@ -60,7 +79,7 @@ async def preview_csv(
     }
 
 
-@router.post("/upload", dependencies=[Depends(require_auth)])
+@router.post("/upload", dependencies=[Depends(require_admin_auth)])
 async def upload_csv(
     file: UploadFile = File(...),
     name: str = Form(..., description="Name for the data source"),
@@ -73,7 +92,7 @@ async def upload_csv(
     This is a one-step operation: the CSV becomes immediately available
     in the Data Explorer and Data API.
     """
-    content = await file.read()
+    content = await _read_limited(file)
     try:
         records = parse_csv(content, delimiter=delimiter)
     except Exception as e:
@@ -167,7 +186,7 @@ async def upload_csv(
     }
 
 
-@router.post("/replace/{flow_id}", dependencies=[Depends(require_auth)])
+@router.post("/replace/{flow_id}", dependencies=[Depends(require_admin_auth)])
 async def replace_csv_data(
     flow_id: uuid.UUID,
     file: UploadFile = File(...),
@@ -180,8 +199,14 @@ async def replace_csv_data(
     flow = result.scalar_one_or_none()
     if not flow:
         raise HTTPException(status_code=404, detail="Flow not found")
+    # Only a CSV source's records may be replaced by a file.
+    connector_type = (await db.execute(
+        select(ConnectionORM.connector_type).where(ConnectionORM.id == flow.connection_id)
+    )).scalar_one_or_none()
+    if connector_type != "csv":
+        raise HTTPException(status_code=400, detail="Flow is not a CSV data source")
 
-    content = await file.read()
+    content = await _read_limited(file)
     try:
         records = parse_csv(content, delimiter=delimiter)
     except Exception as e:

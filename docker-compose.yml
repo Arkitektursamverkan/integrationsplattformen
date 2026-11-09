@@ -53,6 +53,8 @@ services:
       ADMIN_API_KEY: ${ADMIN_API_KEY:-}
       JWT_SECRET: ${JWT_SECRET:-}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3100}
+      # Rate limits per X-Forwarded-For instead of the proxy's address – see .env.example.
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-false}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       EXECUTION_LOG_RETENTION_DAYS: ${EXECUTION_LOG_RETENTION_DAYS:-30}
       ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}

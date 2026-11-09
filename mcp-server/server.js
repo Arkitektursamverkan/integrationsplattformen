@@ -11,7 +11,13 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 
 const API_BASE = process.env.INTEGRATION_PLATFORM_URL || "http://localhost:8100/api/v1";
-const ADMIN_KEY = process.env.INTEGRATION_PLATFORM_ADMIN_KEY || "dev-admin-key";
+const ADMIN_KEY = process.env.INTEGRATION_PLATFORM_ADMIN_KEY;
+if (!ADMIN_KEY) {
+  console.error(
+    "INTEGRATION_PLATFORM_ADMIN_KEY is not set – give it the platform's ADMIN_API_KEY."
+  );
+  process.exit(1);
+}
 
 // ── HTTP helpers ─────────────────────────────────────────────────────────────
 

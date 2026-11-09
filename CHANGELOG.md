@@ -7,7 +7,14 @@ funktioner, en ny korrigering för rättelser.
 
 ## Ej släppt
 
-- (inget än)
+- **Säkerhet: CSV-uppladdning kräver administratör.** `POST /csv/upload` och `/csv/replace/{flöde}` krävde bara inloggning, så en läsare kunde skapa källor och tömma vilket flödes poster som helst. Nu krävs administratör, ersättningen godtar bara flöden vars källa är CSV, och filer över 20 MB avvisas (413).
+- **Säkerhet: gränser för antal anrop gäller nu.** De var inställda men aldrig inkopplade. Inloggning (`/auth/login`, `/auth/entra`, `/auth/setup`) tål 10 anrop i minuten, inkommande webhooks 60 och övrigt 600, per klientadress. Bakom en proxy (webbens nginx, Render) är adressen proxyns; med nya `TRUST_PROXY_HEADERS=true` räknas i stället första adressen i `X-Forwarded-For` – bara när api:t inte går att nå förbi proxyn.
+- **Säkerhet: webhookens hemlighet kontrolleras.** En webhook med hemlighet tar bara emot anrop med samma värde i `X-Webhook-Secret` (annars 401). Webhooks utan hemlighet fungerar som förut.
+- **Säkerhet: Entra-inloggningen är stramare.** Bara åtkomsttoken med plattformens scope (`access_as_user`) godtas, inte id-token. Konton kopplas till Entra-kontots `oid` vid första inloggningen och hittas sedan på den; e-postmatchning gäller bara konton som ännu inte är kopplade, och det overifierade claimet `email` används inte. Ny kolumn `users.entra_oid` (migrering 0004). En token med okänd nyckel hämtar Microsofts nycklar på nytt högst en gång i minuten.
+- **Säkerhet:** admin-nyckeln jämförs i konstant tid; konsumentnycklar med samma prefix ger inte längre fel 500; utgångstider utan tidszon jämförs som UTC.
+- Data-API:t: `by-external` och `changes` visar inte längre CSV-filernas interna originalposter (som övriga anrop redan inte gjorde).
+- **Säkerhet: webben skickar säkerhetshuvuden** – Content-Security-Policy, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` och `Referrer-Policy`.
+- Avbilderna: api:ts avbild innehåller inte längre testerna, `.env`-filer hålls utanför båda avbilderna och webben byggs utan källkartor. MCP-servern startar inte utan `INTEGRATION_PLATFORM_ADMIN_KEY` (förvalet `dev-admin-key` är borttaget).
 
 ## 0.5.0 – 2026-11-09
 
