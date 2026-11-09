@@ -88,6 +88,20 @@ class Settings(BaseSettings):
     # else's calls. Empty = no header.
     POST_EXEC_WEBHOOK_SECRET: str = ""
 
+    # ── Entra (samma app-registrering som portalen och Arkitekten) ───────────
+    # Tenant och client satta = webben visar "Logga in med Microsoft". Tomt =
+    # bara egna konton. Scope tomt = api://<client>/access_as_user.
+    ENTRA_TENANT_ID: str = ""
+    ENTRA_CLIENT_ID: str = ""
+    ENTRA_API_SCOPE: str = ""
+    # De här adresserna blir administratörer vid första Entra-inloggningen.
+    # Andra måste först läggas till av en administratör (med samma e-post).
+    BOOTSTRAP_ADMIN_EMAILS: str = ""
+
+    @property
+    def bootstrap_admin_emails_list(self) -> list[str]:
+        return [e.strip().lower() for e in self.BOOTSTRAP_ADMIN_EMAILS.split(",") if e.strip()]
+
     # ── Arkitekten ───────────────────────────────────────────────────────────
     # Arkitektens flödestjänst (full adress, eller värd[:port] – utan port
     # 8200). Satt = plattformen skapar vid starten källan som hämtar de

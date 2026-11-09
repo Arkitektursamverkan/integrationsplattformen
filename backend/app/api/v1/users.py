@@ -8,7 +8,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.database import get_db
+from app.services import entra
 from app.dependencies import require_admin_auth, get_current_user
 from app.models.user import UserORM
 from app.services.auth_service import (
@@ -124,9 +126,48 @@ async def change_password(body: ChangePasswordRequest, user: UserORM = Depends(g
 @router.get("/setup")
 async def setup_needed(db: AsyncSession = Depends(get_db)) -> dict[str, bool]:
     """Whether the first admin still has to be created. Public, so the login
-    page can send a fresh installation straight to the setup page."""
+    page can send a fresh installation straight to the setup page.
+
+    Not with Entra and BOOTSTRAP_ADMIN_EMAILS: then the first admin is whoever
+    of those signs in with Microsoft."""
+    if entra.konfigurerad() and settings.bootstrap_admin_emails_list:
+        return {"needed": False}
     count = (await db.execute(select(func.count(UserORM.id)))).scalar() or 0
     return {"needed": count == 0}
+
+
+# ── Entra ─────────────────────────────────────────────────────────────────────
+
+@router.get("/config")
+async def auth_config() -> dict:
+    """Public: what the login page should offer."""
+    if not entra.konfigurerad():
+        return {"entra": None}
+    return {"entra": {"tenant_id": settings.ENTRA_TENANT_ID,
+                      "client_id": settings.ENTRA_CLIENT_ID,
+                      "scope": entra.scope()}}
+
+
+class EntraLoginRequest(BaseModel):
+    access_token: str
+
+
+@router.post("/entra", response_model=TokenResponse)
+async def login_entra(body: EntraLoginRequest, db: AsyncSession = Depends(get_db)):
+    """Exchange an Entra access token for the platform's own tokens."""
+    try:
+        claims = await entra.verifiera(body.access_token)
+        user = await entra.användare(db, claims)
+    except entra.EntraForbidden as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except entra.EntraError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    return TokenResponse(
+        access_token=create_access_token(str(user.id), user.username, user.role),
+        refresh_token=create_refresh_token(str(user.id)),
+        role=user.role,
+        username=user.username,
+    )
 
 
 @router.post("/setup", response_model=TokenResponse)
