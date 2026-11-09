@@ -32,7 +32,8 @@ class FakeResponse:
 class FakeClient:
     """Stands in for httpx.AsyncClient; records what was asked for."""
 
-    def __init__(self, routes, **_kwargs):
+    def __init__(self, routes, **kwargs):
+        self.kwargs = kwargs
         self.routes = routes
         self.calls = []
 
@@ -321,3 +322,25 @@ class TestConnectivity:
     async def test_health_failure_is_false_not_an_exception(self, fake_httpx):
         fake_httpx(lambda url: FakeResponse({"ok": False}, status=500))
         assert await _connector(base_url="http://x").test_connection() is False
+
+
+class TestNyckel:
+    """Flödestjänsten kräver X-Arkitekten-Nyckel när installationen har en."""
+
+    @pytest.mark.asyncio
+    async def test_key_sent_when_configured(self, fake_httpx, monkeypatch):
+        from app.config import settings
+        monkeypatch.setattr(settings, "ARK_FLODESTJANST_NYCKEL", "delad-nyckel")
+        holder = fake_httpx(lambda url: FakeResponse({"ok": True, "flows": []}))
+        assert await _connector(base_url="http://x").test_connection() is True
+        assert holder["client"].kwargs["headers"] == {"X-Arkitekten-Nyckel": "delad-nyckel"}
+        # Prövar en väg som kräver nyckeln, inte den öppna /health.
+        assert holder["client"].calls[0][1] == "http://x/api/flows"
+
+    @pytest.mark.asyncio
+    async def test_no_header_without_key(self, fake_httpx, monkeypatch):
+        from app.config import settings
+        monkeypatch.setattr(settings, "ARK_FLODESTJANST_NYCKEL", "")
+        holder = fake_httpx(lambda url: FakeResponse({"ok": True, "flows": []}))
+        await _connector(base_url="http://x").test_connection()
+        assert holder["client"].kwargs["headers"] == {}
