@@ -7,6 +7,10 @@ funktioner, en ny korrigering för rättelser.
 
 ## Ej släppt
 
+- (inget än)
+
+## 0.6.0 – 2026-11-09
+
 - Arkitekten-källan skickar `ARK_FLODESTJANST_NYCKEL` som `X-Arkitekten-Nyckel` till Arkitektens flödestjänst (Arkitekten 0.7.0 kräver den när den är satt där), och "Testa anslutning" prövar nu en väg som kräver nyckeln.
 - **Säkerhet: CSV-uppladdning kräver administratör.** `POST /csv/upload` och `/csv/replace/{flöde}` krävde bara inloggning, så en läsare kunde skapa källor och tömma vilket flödes poster som helst. Nu krävs administratör, ersättningen godtar bara flöden vars källa är CSV, och filer över 20 MB avvisas (413).
 - **Säkerhet: gränser för antal anrop gäller nu.** De var inställda men aldrig inkopplade. Inloggning (`/auth/login`, `/auth/entra`, `/auth/setup`) tål 10 anrop i minuten, inkommande webhooks 60 och övrigt 600, per klientadress. Bakom en proxy (webbens nginx, Render) är adressen proxyns; med nya `TRUST_PROXY_HEADERS=true` räknas i stället första adressen i `X-Forwarded-For` – bara när api:t inte går att nå förbi proxyn.
