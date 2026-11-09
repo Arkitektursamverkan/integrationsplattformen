@@ -62,6 +62,7 @@ services:
       ENTRA_CLIENT_ID: ${ENTRA_CLIENT_ID:-}
       ENTRA_API_SCOPE: ${ENTRA_API_SCOPE:-}
       BOOTSTRAP_ADMIN_EMAILS: ${BOOTSTRAP_ADMIN_EMAILS:-}
+      SETUP_CODE: ${SETUP_CODE:-}
     depends_on:
       db:
         condition: service_healthy

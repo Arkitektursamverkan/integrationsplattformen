@@ -62,7 +62,9 @@ class Settings(BaseSettings):
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
     # ── App ──────────────────────────────────────────────────────────────────
-    APP_ENV: str = "development"
+    # Production unless said otherwise: then weak or placeholder secrets stop
+    # the start. Development and tests set APP_ENV themselves.
+    APP_ENV: str = "production"
     LOG_LEVEL: str = "info"
     # Set in the image at release (Dockerfile ARG); "dev" when built locally.
     APP_VERSION: str = "dev"
@@ -97,6 +99,14 @@ class Settings(BaseSettings):
     # De här adresserna blir administratörer vid första Entra-inloggningen.
     # Andra måste först läggas till av en administratör (med samma e-post).
     BOOTSTRAP_ADMIN_EMAILS: str = ""
+
+    # One-time code for creating the first admin at /setup. In production the
+    # first account cannot be created without it – otherwise whoever reached a
+    # new installation first would become its admin.
+    SETUP_CODE: str = ""
+
+    def setup_code_required(self) -> bool:
+        return self.APP_ENV not in ("development", "test") or bool(self.SETUP_CODE)
 
     @property
     def bootstrap_admin_emails_list(self) -> list[str]:

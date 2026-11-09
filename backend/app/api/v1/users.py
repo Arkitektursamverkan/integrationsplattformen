@@ -1,6 +1,7 @@
 """Authentication and user management endpoints."""
 from __future__ import annotations
 
+import hmac
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -123,17 +124,21 @@ async def change_password(body: ChangePasswordRequest, user: UserORM = Depends(g
 
 # ── Setup: create first admin user ────────────────────────────────────────────
 
+def _setup_closed_for_entra() -> bool:
+    """With Entra and BOOTSTRAP_ADMIN_EMAILS the first admin is whoever of those
+    signs in with Microsoft – the setup form is not needed, so it is closed."""
+    return entra.konfigurerad() and bool(settings.bootstrap_admin_emails_list)
+
+
 @router.get("/setup")
 async def setup_needed(db: AsyncSession = Depends(get_db)) -> dict[str, bool]:
-    """Whether the first admin still has to be created. Public, so the login
-    page can send a fresh installation straight to the setup page.
-
-    Not with Entra and BOOTSTRAP_ADMIN_EMAILS: then the first admin is whoever
-    of those signs in with Microsoft."""
-    if entra.konfigurerad() and settings.bootstrap_admin_emails_list:
-        return {"needed": False}
+    """Whether the first admin still has to be created, and whether that takes
+    the one-time code. Public, so the login page can send a fresh installation
+    straight to the setup page."""
+    if _setup_closed_for_entra():
+        return {"needed": False, "code_required": False}
     count = (await db.execute(select(func.count(UserORM.id)))).scalar() or 0
-    return {"needed": count == 0}
+    return {"needed": count == 0, "code_required": settings.setup_code_required()}
 
 
 # ── Entra ─────────────────────────────────────────────────────────────────────
@@ -170,9 +175,21 @@ async def login_entra(body: EntraLoginRequest, db: AsyncSession = Depends(get_db
     )
 
 
+class SetupRequest(RegisterRequest):
+    setup_code: str | None = None
+
+
 @router.post("/setup", response_model=TokenResponse)
-async def initial_setup(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    """Create the first admin user. Only works when no users exist."""
+async def initial_setup(body: SetupRequest, db: AsyncSession = Depends(get_db)):
+    """Create the first admin user. Only works when no users exist, and – in
+    production – with the installation's one-time SETUP_CODE."""
+    if _setup_closed_for_entra():
+        raise HTTPException(status_code=403, detail="Log in with Microsoft – the first admin comes from BOOTSTRAP_ADMIN_EMAILS.")
+    if settings.setup_code_required():
+        if not settings.SETUP_CODE:
+            raise HTTPException(status_code=403, detail="SETUP_CODE is not set – the first admin cannot be created without it.")
+        if not hmac.compare_digest((body.setup_code or "").strip(), settings.SETUP_CODE):
+            raise HTTPException(status_code=403, detail="Wrong setup code.")
     count = (await db.execute(select(func.count(UserORM.id)))).scalar() or 0
     if count > 0:
         raise HTTPException(status_code=400, detail="Setup already completed. Users exist.")

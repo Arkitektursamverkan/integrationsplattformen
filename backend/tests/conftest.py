@@ -2,6 +2,7 @@
 import os
 
 # Set test env vars before importing app modules
+os.environ.setdefault("APP_ENV", "test")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///test.db")
 os.environ.setdefault("ENCRYPTION_KEY", "test-encryption-key")
 os.environ.setdefault("ADMIN_API_KEY", "test-admin-key")

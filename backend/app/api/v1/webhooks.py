@@ -19,13 +19,14 @@ router = APIRouter()
 # ── CRUD ─────────────────────────────────────────────────────────────────────
 
 
-@router.get("", response_model=list[WebhookEndpointRead])
+# The listing carries each endpoint's path token – admins only.
+@router.get("", response_model=list[WebhookEndpointRead], dependencies=[Depends(require_admin_key)])
 async def list_webhooks(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(WebhookEndpointORM).order_by(WebhookEndpointORM.created_at.desc()))
     return result.scalars().all()
 
 
-@router.get("/{webhook_id}", response_model=WebhookEndpointRead)
+@router.get("/{webhook_id}", response_model=WebhookEndpointRead, dependencies=[Depends(require_admin_key)])
 async def get_webhook(webhook_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(WebhookEndpointORM).where(WebhookEndpointORM.id == webhook_id))
     webhook = result.scalar_one_or_none()
