@@ -7,6 +7,10 @@ funktioner, en ny korrigering för rättelser.
 
 ## Ej släppt
 
+- (inget än)
+
+## 0.4.0 – 2026-11-09
+
 - **Logga in med Microsoft (Entra)** – med samma app-registrering som Arkitekturportalen och Arkitekten, så att ett och samma konto gäller överallt. Sätt `ENTRA_TENANT_ID` och `ENTRA_CLIENT_ID` på api:t och lägg till `https://<plattformens adress>/login` som SPA-omdirigering. Adresserna i `BOOTSTRAP_ADMIN_EMAILS` blir administratörer vid första inloggningen; andra släpps in om en administratör lagt till dem med samma e-post. Egna konton fungerar som förut.
 
 - **Arkitektens källa skapas av sig själv**: med `ARKITEKTEN_URL` satt (full adress, eller bara värd – då port 8200) skapar plattformen vid starten källan, flödet och schemat (varannan timme) som hämtar Arkitektens publicerade processbilder. Bara om ingen källa av typen arkitekten finns – en befintlig rörs inte.
