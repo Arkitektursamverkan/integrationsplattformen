@@ -1,0 +1,43 @@
+#!/bin/sh
+# Gives API_UPSTREAM a name nginx can look up. Sourced by the nginx image's
+# entrypoint (/docker-entrypoint.d), before the site config is written.
+#
+# nginx's own resolver (needed so a moved API is found again) asks the DNS
+# server for exactly the name it is given – it does not try the search
+# domains in /etc/resolv.conf. docker compose answers a bare service name
+# ("api"), but a platform such as Render hands out a short internal name
+# ("portal-api-y5la") that only resolves with a search domain. Such a name is
+# completed here with the first search domain under which it resolves.
+
+ea_host=${API_UPSTREAM%:*}
+ea_port=${API_UPSTREAM##*:}
+[ "$ea_port" = "$API_UPSTREAM" ] && ea_port=""
+
+case "$ea_host" in
+    *.*|"") ;; # already a full name (or an address)
+    *)
+        if ! getent hosts "$ea_host." >/dev/null 2>&1; then
+            ea_domains=$(awk '$1=="search" {for (i = 2; i <= NF; i++) print $i}' /etc/resolv.conf 2>/dev/null)
+            ea_full=""
+            # The API may still be starting: give its name a minute to appear.
+            for ea_try in 1 2 3 4 5 6 7 8 9 10 11 12; do
+                for ea_domain in $ea_domains; do
+                    if getent hosts "$ea_host.$ea_domain." >/dev/null 2>&1; then
+                        ea_full="$ea_host.$ea_domain"
+                        break 2
+                    fi
+                done
+                [ -n "$ea_domains" ] || break
+                sleep 5
+            done
+            if [ -n "$ea_full" ]; then
+                API_UPSTREAM="$ea_full${ea_port:+:$ea_port}"
+                echo "18-api-upstream.envsh: info: $ea_host → $ea_full (search domain)"
+            else
+                echo "18-api-upstream.envsh: warning: $ea_host could not be looked up – nginx will keep trying it as it is"
+            fi
+        fi
+        ;;
+esac
+export API_UPSTREAM
+unset ea_host ea_port ea_domains ea_domain ea_full ea_try
