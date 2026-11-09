@@ -21,7 +21,10 @@ LABEL org.opencontainers.image.title="Integration Platform web" \
 COPY --from=builder /app/dist /usr/share/nginx/html
 # The nginx image renders templates/*.template into conf.d at start, filling
 # in only the environment variables that are set (nginx's own $host etc. stay).
-ENV API_UPSTREAM=api:8000
+# API_UPSTREAM is a host:port – on Render the API's internal hostport.
+ENV API_UPSTREAM=api:8000 \
+    PORT=80 \
+    NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
 COPY templates/default.conf.template /etc/nginx/templates/default.conf.template
 
 EXPOSE 80

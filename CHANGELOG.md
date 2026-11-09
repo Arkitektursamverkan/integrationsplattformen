@@ -9,6 +9,12 @@ funktioner, en ny korrigering för rättelser.
 
 - (inget än)
 
+## 0.3.0 – 2026-11-09
+
+- **Går att köra på Render och liknande plattformar.** Webben lyssnar på `PORT` (förval 80) och slår upp api-adressen (`API_UPSTREAM`) på nytt var tionde sekund i stället för en gång vid start.
+- `DATABASE_URL` tas emot i den form en hanterad databas ger den (`postgres://…`, `postgresql://…`, `sslmode=`).
+
+
 ## 0.2.3 – 2026-11-02
 
 - Backend på Python 3.14 och webbens bygge på Node 26 (LTS).
