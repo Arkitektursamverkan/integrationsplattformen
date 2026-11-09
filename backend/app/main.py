@@ -51,6 +51,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         log.warning("app.weak_secrets", settings=weak, note="only acceptable in development and test")
     log.info("app.started", env=settings.APP_ENV)
 
+    if settings.ARKITEKTEN_URL:
+        # Före schemaläggaren, så att ett nyskapat schema laddas med de andra.
+        from app.database import async_session
+        from app.services.arkitekten_kalla import se_till_att_källan_finns
+        try:
+            async with async_session() as db:
+                await se_till_att_källan_finns(db, settings.ARKITEKTEN_URL)
+        except Exception as e:  # en källa som saknas får inte stoppa plattformen
+            log.error("arkitekten.kalla_misslyckades", error=str(e))
+
     from app.tasks.scheduler import start_scheduler, shutdown_scheduler
     await start_scheduler()
 

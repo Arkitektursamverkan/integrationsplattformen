@@ -88,5 +88,11 @@ class Settings(BaseSettings):
     # else's calls. Empty = no header.
     POST_EXEC_WEBHOOK_SECRET: str = ""
 
+    # ── Arkitekten ───────────────────────────────────────────────────────────
+    # Arkitektens flödestjänst (full adress, eller värd[:port] – utan port
+    # 8200). Satt = plattformen skapar vid starten källan som hämtar de
+    # publicerade processbilderna, om ingen sådan källa finns. Tomt = inget.
+    ARKITEKTEN_URL: str = ""
+
 
 settings = Settings()

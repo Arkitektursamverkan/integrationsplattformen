@@ -121,6 +121,14 @@ async def change_password(body: ChangePasswordRequest, user: UserORM = Depends(g
 
 # ── Setup: create first admin user ────────────────────────────────────────────
 
+@router.get("/setup")
+async def setup_needed(db: AsyncSession = Depends(get_db)) -> dict[str, bool]:
+    """Whether the first admin still has to be created. Public, so the login
+    page can send a fresh installation straight to the setup page."""
+    count = (await db.execute(select(func.count(UserORM.id)))).scalar() or 0
+    return {"needed": count == 0}
+
+
 @router.post("/setup", response_model=TokenResponse)
 async def initial_setup(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
     """Create the first admin user. Only works when no users exist."""
