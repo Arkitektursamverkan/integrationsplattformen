@@ -7,7 +7,8 @@ funktioner, en ny korrigering för rättelser.
 
 ## Ej släppt
 
-- (inget än)
+- **Arkitektens källa skapas av sig själv**: med `ARKITEKTEN_URL` satt (full adress, eller bara värd – då port 8200) skapar plattformen vid starten källan, flödet och schemat (varannan timme) som hämtar Arkitektens publicerade processbilder. Bara om ingen källa av typen arkitekten finns – en befintlig rörs inte.
+- **Inloggningen på svenska**, och en ny installation utan konton går direkt till sidan där det första administratörskontot skapas (ny publik `GET /api/v1/auth/setup` svarar `{"needed": true|false}`).
 
 ## 0.3.1 – 2026-11-09
 

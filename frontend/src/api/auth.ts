@@ -68,17 +68,11 @@ export function useMe() {
   });
 }
 
-export function useCheckSetup() {
+/** Whether no user exists yet, so the first admin must be created at /setup. */
+export function useSetupNeeded() {
   return useQuery<boolean>({
     queryKey: ["setup-needed"],
-    queryFn: async () => {
-      try {
-        // Try to list users — if it 401s with "no users", setup is needed
-        await client.get("/auth/me");
-        return false;
-      } catch {
-        return true;
-      }
-    },
+    queryFn: () => client.get("/auth/setup").then((r) => !!r.data?.needed),
+    retry: false,
   });
 }
