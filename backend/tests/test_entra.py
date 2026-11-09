@@ -22,7 +22,8 @@ JWKS = {"keys": [{**_publik, "kid": "k1", "use": "sig"}]}
 
 def _token(**ändra) -> str:
     claims = {"aud": f"api://{CLIENT}", "iss": f"https://sts.windows.net/{TENANT}/",
-              "exp": int(time.time()) + 600, "preferred_username": "Anna@Example.org", "name": "Anna"}
+              "exp": int(time.time()) + 600, "preferred_username": "Anna@Example.org", "name": "Anna",
+              "oid": "oid-anna", "scp": "access_as_user"}
     claims.update(ändra)
     return jwt.encode(claims, _pem, algorithm="RS256", headers={"kid": "k1"})
 
@@ -47,6 +48,8 @@ async def test_v2_audience_accepted():
     {"aud": "api://annan-app"},
     {"iss": "https://sts.windows.net/annan-tenant/"},
     {"exp": int(time.time()) - 10},
+    {"scp": None},  # id-token: samma aud och iss, men inget scp
+    {"scp": "User.Read"},
 ])
 async def test_rejected(ändra):
     with pytest.raises(entra.EntraError):
@@ -64,19 +67,58 @@ async def db(tmp_path):
 
 
 async def test_bootstrap_address_becomes_admin(db):
-    u = await entra.användare(db, {"preferred_username": "Anna@Example.org", "name": "Anna"})
-    assert (u.username, u.email, u.role) == ("anna@example.org", "anna@example.org", "admin")
+    u = await entra.användare(db, {"preferred_username": "Anna@Example.org", "name": "Anna", "oid": "oid-anna"})
+    assert (u.username, u.email, u.role, u.entra_oid) == ("anna@example.org", "anna@example.org", "admin", "oid-anna")
     # Andra gången: samma konto.
-    assert (await entra.användare(db, {"preferred_username": "anna@example.org"})).id == u.id
+    assert (await entra.användare(db, {"preferred_username": "anna@example.org", "oid": "oid-anna"})).id == u.id
 
 
 async def test_unknown_address_refused(db):
     with pytest.raises(entra.EntraForbidden):
-        await entra.användare(db, {"preferred_username": "okand@example.org"})
+        await entra.användare(db, {"preferred_username": "okand@example.org", "oid": "oid-x"})
 
 
 async def test_existing_account_linked_by_email(db):
     db.add(UserORM(username="bertil", email="Bertil@example.org", password_hash="x", role="viewer"))
     await db.commit()
-    u = await entra.användare(db, {"preferred_username": "bertil@example.org"})
-    assert (u.username, u.role) == ("bertil", "viewer")
+    u = await entra.användare(db, {"preferred_username": "bertil@example.org", "oid": "oid-bertil"})
+    assert (u.username, u.role, u.entra_oid) == ("bertil", "viewer", "oid-bertil")
+    # Kopplat: hittas på oid även när e-posten i Entra har bytts.
+    assert (await entra.användare(db, {"preferred_username": "b@example.org", "oid": "oid-bertil"})).id == u.id
+
+
+async def test_linked_account_not_taken_over_by_email(db):
+    db.add(UserORM(username="bertil", email="bertil@example.org", password_hash="x",
+                   role="viewer", entra_oid="oid-bertil"))
+    await db.commit()
+    with pytest.raises(entra.EntraForbidden):
+        await entra.användare(db, {"preferred_username": "bertil@example.org", "oid": "oid-annan"})
+
+
+async def test_unverified_email_claim_ignored(db):
+    db.add(UserORM(username="bertil", email="bertil@example.org", password_hash="x", role="admin"))
+    await db.commit()
+    with pytest.raises(entra.EntraError):
+        await entra.användare(db, {"email": "bertil@example.org", "oid": "oid-x"})
+
+
+async def test_token_without_oid_refused(db):
+    with pytest.raises(entra.EntraError):
+        await entra.användare(db, {"preferred_username": "anna@example.org"})
+
+
+async def test_unknown_kid_refetches_at_most_once_a_minute(monkeypatch):
+    hämtningar = []
+
+    async def hämta():
+        hämtningar.append(1)
+        return {"keys": []}
+
+    monkeypatch.setattr(entra, "_hämta", hämta)
+    monkeypatch.setattr(entra, "_jwks", None)
+    monkeypatch.setattr(entra, "_senast_tvingad", None)
+    for _ in range(3):
+        with pytest.raises(entra.EntraError):
+            await entra.verifiera(_token())
+    # Första anropet: hämtning + en tvingad. Sedan bara cachen.
+    assert len(hämtningar) == 2

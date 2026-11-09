@@ -26,6 +26,7 @@ ENV API_UPSTREAM=api:8000 \
     PORT=80 \
     NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
 COPY templates/default.conf.template /etc/nginx/templates/default.conf.template
+COPY docker/security-headers.conf /etc/nginx/security-headers.conf
 # Completes a short internal API name with its search domain (Render).
 COPY docker/18-api-upstream.envsh /docker-entrypoint.d/18-api-upstream.envsh
 

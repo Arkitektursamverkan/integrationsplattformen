@@ -5,6 +5,8 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    include /etc/nginx/security-headers.conf;
+
     # Gzip
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
@@ -36,9 +38,11 @@ server {
     # Cache static assets — use no-cache so browser revalidates on each visit
     location ~* \.(js|css)$ {
         add_header Cache-Control "no-cache";
+        include /etc/nginx/security-headers.conf;
     }
     location ~* \.(png|svg|ico|woff2?)$ {
         expires 7d;
         add_header Cache-Control "public";
+        include /etc/nginx/security-headers.conf;
     }
 }

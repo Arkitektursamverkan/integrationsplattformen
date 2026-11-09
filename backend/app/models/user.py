@@ -20,3 +20,5 @@ class UserORM(Base, TimestampMixin):
     full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     role: Mapped[str] = mapped_column(String(20), nullable=False, default="viewer")
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    # Entra-kontots oid, satt vid första Microsoft-inloggningen.
+    entra_oid: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True)

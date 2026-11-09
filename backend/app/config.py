@@ -61,6 +61,11 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
+    # Rate limits count per client address. Behind nginx or a platform proxy
+    # that is the proxy's; true = take the first X-Forwarded-For entry instead.
+    # Only when the API is reachable through that proxy alone (see ratelimit.py).
+    TRUST_PROXY_HEADERS: bool = False
+
     # ── App ──────────────────────────────────────────────────────────────────
     # Production unless said otherwise: then weak or placeholder secrets stop
     # the start. Development and tests set APP_ENV themselves.

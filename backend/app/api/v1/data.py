@@ -3,8 +3,6 @@ import uuid
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,10 +13,10 @@ from app.models.data_record import DataRecordORM
 from app.models.execution_log import ExecutionLogORM
 from app.models.flow import FlowORM
 from app.models.connection import ConnectionORM
+from app.ratelimit import limiter
 from app.schemas.data import DataRecordList, DataRecordRead, DataSourceSummary
 
 router = APIRouter()
-limiter = Limiter(key_func=get_remote_address)
 
 # Exclude internal csv_original records from all data queries
 _VISIBLE = DataRecordORM.source_type != "csv_original"
@@ -104,9 +102,10 @@ async def get_record_by_external_id(
         select(DataRecordORM).where(
             DataRecordORM.flow_id == flow_id,
             DataRecordORM.external_id == external_id,
+            _VISIBLE,
         )
     )
-    record = result.scalar_one_or_none()
+    record = result.scalars().first()
     if not record:
         raise HTTPException(status_code=404, detail="Record not found")
     return record
@@ -125,6 +124,7 @@ async def list_changes(
     base_query = select(DataRecordORM).where(
         DataRecordORM.flow_id == flow_id,
         DataRecordORM.updated_at > since,
+        _VISIBLE,
     )
     count_result = await db.execute(
         select(func.count(DataRecordORM.id)).where(

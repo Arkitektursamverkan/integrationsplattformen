@@ -4,7 +4,7 @@ from __future__ import annotations
 import hmac
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +14,7 @@ from app.database import get_db
 from app.services import entra
 from app.dependencies import require_admin_auth, get_current_user
 from app.models.user import UserORM
+from app.ratelimit import limiter
 from app.services.auth_service import (
     hash_password, verify_password, create_access_token, create_refresh_token, decode_token,
 )
@@ -67,8 +68,13 @@ class ChangePasswordRequest(BaseModel):
 
 # ── Auth endpoints ────────────────────────────────────────────────────────────
 
+# Password guessing: a few attempts a minute per client.
+_LOGIN_LIMIT = "10/minute"
+
+
 @router.post("/login", response_model=TokenResponse)
-async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit(_LOGIN_LIMIT)
+async def login(request: Request, body: LoginRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(UserORM).where(UserORM.username == body.username, UserORM.is_active.is_(True))
     )
@@ -158,7 +164,8 @@ class EntraLoginRequest(BaseModel):
 
 
 @router.post("/entra", response_model=TokenResponse)
-async def login_entra(body: EntraLoginRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit(_LOGIN_LIMIT)
+async def login_entra(request: Request, body: EntraLoginRequest, db: AsyncSession = Depends(get_db)):
     """Exchange an Entra access token for the platform's own tokens."""
     try:
         claims = await entra.verifiera(body.access_token)
@@ -180,7 +187,8 @@ class SetupRequest(RegisterRequest):
 
 
 @router.post("/setup", response_model=TokenResponse)
-async def initial_setup(body: SetupRequest, db: AsyncSession = Depends(get_db)):
+@limiter.limit(_LOGIN_LIMIT)
+async def initial_setup(request: Request, body: SetupRequest, db: AsyncSession = Depends(get_db)):
     """Create the first admin user. Only works when no users exist, and – in
     production – with the installation's one-time SETUP_CODE."""
     if _setup_closed_for_entra():
