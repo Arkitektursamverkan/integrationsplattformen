@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { Box, Button, Card, CardContent, Link, TextField, Typography, Alert } from "@mui/material";
-import { useSetup, useSetupNeeded, setTokens } from "@/api/auth";
+import { useSetup, useSetupStatus, setTokens } from "@/api/auth";
 
 export default function Setup() {
   const navigate = useNavigate();
   const setupMutation = useSetup();
-  const setupNeeded = useSetupNeeded();
+  const setup = useSetupStatus();
+  const [setupCode, setSetupCode] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -16,8 +17,8 @@ export default function Setup() {
 
   // Once an account exists this page can do nothing: log in instead.
   useEffect(() => {
-    if (setupNeeded.data === false) navigate("/login", { replace: true });
-  }, [setupNeeded.data, navigate]);
+    if (setup.data?.needed === false) navigate("/login", { replace: true });
+  }, [setup.data?.needed, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,11 +32,16 @@ export default function Setup() {
       return;
     }
     try {
-      const tokens = await setupMutation.mutateAsync({ username, password, full_name: fullName || undefined, email: email || undefined });
+      const tokens = await setupMutation.mutateAsync({ username, password, full_name: fullName || undefined, email: email || undefined, setup_code: setupCode.trim() || undefined });
       setTokens(tokens);
       navigate("/");
     } catch (err: any) {
-      setError(err.response?.status === 400 ? "Det finns redan ett konto – logga in i stället." : "Kontot kunde inte skapas");
+      const status = err.response?.status;
+      setError(
+        status === 400 ? "Det finns redan ett konto – logga in i stället."
+        : status === 403 ? "Fel engångskod – eller ingen satt (SETUP_CODE). Fråga den som installerade."
+        : "Kontot kunde inte skapas",
+      );
     }
   };
 
@@ -51,6 +57,11 @@ export default function Setup() {
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
           <form onSubmit={handleSubmit}>
+            {setup.data?.code_required && (
+              <TextField label="Engångskod" fullWidth required value={setupCode} autoComplete="off"
+                onChange={(e) => setSetupCode(e.target.value)} sx={{ mb: 2 }}
+                helperText="SETUP_CODE från installationen (på Render: portal-api → Environment)" />
+            )}
             <TextField label="Användarnamn" fullWidth required value={username} autoComplete="username"
               onChange={(e) => setUsername(e.target.value)} sx={{ mb: 2 }} autoFocus />
             <TextField label="Namn (valfritt)" fullWidth value={fullName}
@@ -63,7 +74,7 @@ export default function Setup() {
             <TextField label="Upprepa lösenordet" fullWidth required type="password" value={confirmPassword} autoComplete="new-password"
               onChange={(e) => setConfirmPassword(e.target.value)} sx={{ mb: 3 }} />
             <Button type="submit" variant="contained" fullWidth size="large"
-              disabled={setupMutation.isPending || !username || !password || !confirmPassword}>
+              disabled={setupMutation.isPending || !username || !password || !confirmPassword || (!!setup.data?.code_required && !setupCode.trim())}>
               {setupMutation.isPending ? "Skapar kontot…" : "Skapa administratörskontot"}
             </Button>
           </form>

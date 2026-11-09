@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Box, Button, Card, CardContent, Divider, Link, TextField, Typography, Alert } from "@mui/material";
-import { useLogin, useSetupNeeded, setTokens } from "@/api/auth";
+import { useLogin, useSetupStatus, setTokens } from "@/api/auth";
 import { completeEntraLogin, fetchEntraConfig, startEntraLogin } from "@/api/entra";
 
 export default function Login() {
   const navigate = useNavigate();
   const loginMutation = useLogin();
-  const setupNeeded = useSetupNeeded();
+  const setup = useSetupStatus();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -32,8 +32,8 @@ export default function Login() {
 
   // A fresh installation has no accounts yet: go straight to creating the first one.
   useEffect(() => {
-    if (setupNeeded.data) navigate("/setup", { replace: true });
-  }, [setupNeeded.data, navigate]);
+    if (setup.data?.needed) navigate("/setup", { replace: true });
+  }, [setup.data?.needed, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +83,7 @@ export default function Login() {
               {loginMutation.isPending ? "Loggar in…" : "Logga in"}
             </Button>
           </form>
-          {setupNeeded.data && (
+          {setup.data?.needed && (
             <Typography variant="body2" sx={{ mt: 2 }}>
               Inget konto finns ännu – <Link component={RouterLink} to="/setup">skapa det första</Link>.
             </Typography>

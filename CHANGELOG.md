@@ -7,7 +7,9 @@ funktioner, en ny korrigering för rättelser.
 
 ## Ej släppt
 
-- (inget än)
+- **Säkerhet: förvaltningens läsningar kräver inloggning.** Listorna och detaljerna för källor, flöden, scheman och körningar svarade utan inloggning; nu krävs inloggning eller admin-nyckeln. Webhooks (med sina hemliga sökvägar) visas bara för administratörer. Portalens anrop (`/data` och "Hämta nu") påverkas inte.
+- **Säkerhet: första administratören kräver engångskoden `SETUP_CODE`** i produktion. Utan den går inget första konto att skapa. Med Entra och `BOOTSTRAP_ADMIN_EMAILS` är sidan stängd helt.
+- **Säkerhet: `APP_ENV` är `production` som standard**, så svaga eller exempelhemligheter stoppar starten även när `APP_ENV` inte är satt. Utveckling sätter `APP_ENV=development` själv.
 
 ## 0.4.0 – 2026-11-09
 

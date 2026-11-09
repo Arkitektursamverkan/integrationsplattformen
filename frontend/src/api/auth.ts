@@ -54,7 +54,7 @@ export function useLogin() {
 
 export function useSetup() {
   return useMutation({
-    mutationFn: (data: { username: string; password: string; full_name?: string; email?: string }) =>
+    mutationFn: (data: { username: string; password: string; full_name?: string; email?: string; setup_code?: string }) =>
       client.post("/auth/setup", data).then((r) => r.data as TokenResponse),
   });
 }
@@ -68,11 +68,17 @@ export function useMe() {
   });
 }
 
-/** Whether no user exists yet, so the first admin must be created at /setup. */
-export function useSetupNeeded() {
-  return useQuery<boolean>({
+export interface SetupStatus {
+  /** No user exists yet, so the first admin must be created at /setup. */
+  needed: boolean;
+  /** Creating it takes the installation's one-time SETUP_CODE. */
+  code_required: boolean;
+}
+
+export function useSetupStatus() {
+  return useQuery<SetupStatus>({
     queryKey: ["setup-needed"],
-    queryFn: () => client.get("/auth/setup").then((r) => !!r.data?.needed),
+    queryFn: () => client.get("/auth/setup").then((r) => ({ needed: !!r.data?.needed, code_required: !!r.data?.code_required })),
     retry: false,
   });
 }
