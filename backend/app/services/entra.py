@@ -58,7 +58,10 @@ def _mottagare() -> set[str]:
     return {f"api://{c}", c}
 
 
-_jwks: tuple[float, dict[str, Any]] | None = None
+# Nycklarna gäller en tenant. Tenanten kan sättas eller bytas efter starten
+# (hämtas ur portalen, se services/installation.py), så cachen hör till den
+# tenant den hämtades för.
+_jwks: tuple[str, float, dict[str, Any]] | None = None
 _JWKS_TTL = 3600.0
 # En token med okänt kid tvingar fram en ny hämtning – högst så här ofta, så
 # att påhittade kid inte kan få oss att fråga Microsoft vid varje anrop.
@@ -77,14 +80,16 @@ async def _hämta() -> dict[str, Any]:
 async def _nycklar(tvinga: bool = False) -> dict[str, Any]:
     global _jwks, _senast_tvingad
     nu = time.monotonic()
-    if _jwks and not tvinga and nu - _jwks[0] < _JWKS_TTL:
-        return _jwks[1]
-    if _jwks and tvinga and _senast_tvingad is not None and nu - _senast_tvingad < _TVINGAD_MINST:
-        return _jwks[1]
+    tenant = settings.ENTRA_TENANT_ID
+    cache = _jwks if _jwks and _jwks[0] == tenant else None
+    if cache and not tvinga and nu - cache[1] < _JWKS_TTL:
+        return cache[2]
+    if cache and tvinga and _senast_tvingad is not None and nu - _senast_tvingad < _TVINGAD_MINST:
+        return cache[2]
     if tvinga:
         _senast_tvingad = nu
-    _jwks = (nu, await _hämta())
-    return _jwks[1]
+    _jwks = (tenant, nu, await _hämta())
+    return _jwks[2]
 
 
 async def verifiera(token: str, nycklar: dict[str, Any] | None = None) -> dict[str, Any]:

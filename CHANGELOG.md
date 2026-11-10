@@ -7,7 +7,7 @@ funktioner, en ny korrigering för rättelser.
 
 ## Ej släppt
 
-- (inget än)
+- **Render-automatik: Entra ur portalen.** Med nya `PORTAL_URL` (full adress `http://värd:port/api/v1` eller bara `värd:port`, som Renders `hostport`) hämtar plattformen portalens `GET /installation` i bakgrunden vid starten – var 10:e sekund tills det lyckas, sedan var 5:e minut – och fyller `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, `ENTRA_API_SCOPE` och `BOOTSTRAP_ADMIN_EMAILS` när de är tomma i plattformens egen miljö. Egna värden vinner alltid. Hemligheten (`X-Installation-Secret`) är nya `PORTAL_INSTALLATION_SECRET`, tomt = `POST_EXEC_WEBHOOK_SECRET`. Omdirigeringar följs inte. Kräver en portal med `/installation`. Utan `PORTAL_URL` är allt som förut. Microsofts nycklar cachas nu per tenant.
 
 ## 0.8.0 – 2026-11-10
 
