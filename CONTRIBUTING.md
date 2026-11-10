@@ -42,7 +42,7 @@ DATABASE_URL=sqlite+aiosqlite:///test.db ENCRYPTION_KEY=test-key ADMIN_API_KEY=t
 
 # Frontend
 cd frontend
-npm install && npm run build
+npm ci && npm run build
 ```
 
 ## Licens
