@@ -9,6 +9,17 @@ funktioner, en ny korrigering för rättelser.
 
 - (inget än)
 
+## 0.8.0 – 2026-11-10
+
+- **Säkerhet: inloggningar kan återkallas.** Varje användare har en tokenversion (migrering 0006); lösenordsbyte och "logga ut överallt" gör tidigare åtkomst- och uppdateringstoken ogiltiga. Token från äldre versioner gäller tills de går ut. Uppdateringstoken ligger i `sessionStorage`.
+- **Säkerhet: Entra** – lokala konton med lösenord kopplas inte via e-posten, gästkonton (B2B) nekas och `BOOTSTRAP_ADMIN_EMAILS` ger administratörsroll bara så länge ingen administratör finns. Koppling och befordran loggas. Nya `ENTRA_REQUIRED_SCOPE` för ett eget scope.
+- **Säkerhet: läsare ser inte hemligheter** – huvuden och nycklar i kopplingar, webhookadresser och fullständiga felmeddelanden visas bara för administratörer; den maskerade visningen skriver aldrig över ett sparat värde.
+- **Säkerhet: inga standardlösenord.** docker compose kräver `POSTGRES_PASSWORD`, och API:t vägrar starta i produktion med kända förval (`integration_pass` m.fl.). **Uppgradering: en installation som kör med `integration_pass` byter först lösenordet** – `ALTER USER integration_user WITH PASSWORD '…'` och samma värde i `.env`.
+- **API-porten publiceras inte längre** i repots docker-compose.yml; webben och portalen når API:t över Docker-nätet. Behövs porten på värden: lägg till `deploy/api-port.yml`.
+- Gränser: kroppar högst 21 MB i API:t och nginx; transformstegen körs i en tråd med gränser för reguljära uttryck och mallar. Inaktiverade flöden körs inte av webhook eller schema.
+- MCP-servern har `MCP_READ_ONLY=1`. Engångskoden med å/ä/ö ger inte längre fel 500.
+- Webben kör nginx som vanlig användare (nginx-unprivileged), fortfarande på port 80, och skickar HSTS bara över https.
+
 ## 0.7.0 – 2026-11-10
 
 - **Säkerhet: kopplingar når inte interna adresser i produktion** (loopback, länklokala inkl. 169.254.169.254, privata, 100.64/10, reserverade; omdirigeringar följs inte). Interna mål tillåts med nya `CONNECTOR_ALLOWED_HOSTS` (värdnamn, `*.domän`, IP eller CIDR); värden i `ARKITEKTEN_URL` är alltid tillåten. `CONNECTOR_BLOCK_INTERNAL=false` stänger av spärren. **En installation som hämtar från interna system måste sätta `CONNECTOR_ALLOWED_HOSTS` vid uppgraderingen.**
