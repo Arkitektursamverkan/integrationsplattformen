@@ -156,7 +156,11 @@ def test_forwarded_for_only_when_trusted(monkeypatch):
     monkeypatch.setattr(settings, "TRUST_PROXY_HEADERS", False)
     assert client_address(_anrop("1.2.3.4, 10.0.0.9")) == "10.0.0.1"
     monkeypatch.setattr(settings, "TRUST_PROXY_HEADERS", True)
-    assert client_address(_anrop("1.2.3.4, 10.0.0.9")) == "1.2.3.4"
+    monkeypatch.setattr(settings, "TRUSTED_PROXY_COUNT", 1)
+    # Ledet längst till höger är det vår proxy skrev; "1.2.3.4" kan anroparen
+    # ha hittat på (se test_sakerhet_3).
+    assert client_address(_anrop("1.2.3.4, 10.0.0.9")) == "10.0.0.9"
+    assert client_address(_anrop("1.2.3.4")) == "1.2.3.4"
     assert client_address(_anrop(None)) == "10.0.0.1"
 
 

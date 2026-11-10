@@ -16,6 +16,7 @@ from pathlib import Path
 
 import httpx
 
+from app.connectors import natverk
 from app.connectors.base import BaseConnector
 from app.connectors.registry import register_connector
 
@@ -157,7 +158,7 @@ class TwoC8Connector(BaseConnector):
 
         resource_type = self.config.get("resource_type", "models")
 
-        async with httpx.AsyncClient(timeout=30.0, verify=self._verify_ssl()) as client:
+        async with natverk.klient(timeout=30.0, verify=self._verify_ssl()) as client:
             if resource_type == "models":
                 return await self._fetch_models(client, repository_id)
             elif resource_type == "symbols":
@@ -343,7 +344,7 @@ class TwoC8Connector(BaseConnector):
         if mode == "mock":
             return True
         try:
-            async with httpx.AsyncClient(timeout=10.0, verify=self._verify_ssl()) as client:
+            async with natverk.klient(timeout=10.0, verify=self._verify_ssl()) as client:
                 # Hit the versions endpoint — lightweight and auth-required
                 resp = await client.get(
                     f"{self._base_url()}/mt-backend/api/v1/versions",

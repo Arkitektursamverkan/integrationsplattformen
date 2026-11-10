@@ -331,16 +331,44 @@ class TestNyckel:
     async def test_key_sent_when_configured(self, fake_httpx, monkeypatch):
         from app.config import settings
         monkeypatch.setattr(settings, "ARK_FLODESTJANST_NYCKEL", "delad-nyckel")
+        monkeypatch.setattr(settings, "ARKITEKTEN_URL", "x")  # = http://x:8200
         holder = fake_httpx(lambda url: FakeResponse({"ok": True, "flows": []}))
-        assert await _connector(base_url="http://x").test_connection() is True
+        assert await _connector(base_url="http://x:8200").test_connection() is True
         assert holder["client"].kwargs["headers"] == {"X-Arkitekten-Nyckel": "delad-nyckel"}
         # Prövar en väg som kräver nyckeln, inte den öppna /health.
-        assert holder["client"].calls[0][1] == "http://x/api/flows"
+        assert holder["client"].calls[0][1] == "http://x:8200/api/flows"
 
     @pytest.mark.asyncio
     async def test_no_header_without_key(self, fake_httpx, monkeypatch):
         from app.config import settings
         monkeypatch.setattr(settings, "ARK_FLODESTJANST_NYCKEL", "")
+        monkeypatch.setattr(settings, "ARKITEKTEN_URL", "http://x:8200")
         holder = fake_httpx(lambda url: FakeResponse({"ok": True, "flows": []}))
-        await _connector(base_url="http://x").test_connection()
+        await _connector(base_url="http://x:8200").test_connection()
+        assert holder["client"].kwargs["headers"] == {}
+
+    @pytest.mark.parametrize("base_url", [
+        "http://annan:8200",       # annan värd
+        "https://x:8200",          # annat schema
+        "http://x:8201",           # annan port
+        "http://x",                # port 80, inte 8200
+        "http://x:8200@annan:8200",  # användardel som ser ut som värden
+    ])
+    @pytest.mark.asyncio
+    async def test_key_only_to_configured_arkitekten(self, fake_httpx, monkeypatch, base_url):
+        """REGRESSION: nyckeln gick till vilken adress kopplingen än pekade på."""
+        from app.config import settings
+        monkeypatch.setattr(settings, "ARK_FLODESTJANST_NYCKEL", "delad-nyckel")
+        monkeypatch.setattr(settings, "ARKITEKTEN_URL", "http://x:8200")
+        holder = fake_httpx(lambda url: FakeResponse({"ok": True, "flows": []}))
+        await _connector(base_url=base_url).test_connection()
+        assert holder["client"].kwargs["headers"] == {}
+
+    @pytest.mark.asyncio
+    async def test_no_key_without_arkitekten_url(self, fake_httpx, monkeypatch):
+        from app.config import settings
+        monkeypatch.setattr(settings, "ARK_FLODESTJANST_NYCKEL", "delad-nyckel")
+        monkeypatch.setattr(settings, "ARKITEKTEN_URL", "")
+        holder = fake_httpx(lambda url: FakeResponse({"ok": True, "flows": []}))
+        await _connector(base_url="http://x:8200").test_connection()
         assert holder["client"].kwargs["headers"] == {}

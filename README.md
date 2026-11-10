@@ -22,6 +22,10 @@ the [arkitekturportalen-drift](https://github.com/Arkitektursamverkan/arkitektur
 repository: its `./installera.sh` asks whether to include the platform and
 connects the two.
 
+Settings that matter for security – connections to internal addresses
+(`CONNECTOR_ALLOWED_HOSTS`), consumer-key scopes, the signed webhook and rate
+limits behind a proxy – are described in [docs/sakerhet.md](docs/sakerhet.md).
+
 ## Development
 
 ```bash

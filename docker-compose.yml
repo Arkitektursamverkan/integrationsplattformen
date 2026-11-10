@@ -55,12 +55,18 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3100}
       # Rate limits per X-Forwarded-For instead of the proxy's address – see .env.example.
       TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-false}
+      TRUSTED_PROXY_COUNT: ${TRUSTED_PROXY_COUNT:-1}
+      LOGIN_MAX_FAILURES: ${LOGIN_MAX_FAILURES:-10}
+      LOGIN_FAILURE_WINDOW_SECONDS: ${LOGIN_FAILURE_WINDOW_SECONDS:-900}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       EXECUTION_LOG_RETENTION_DAYS: ${EXECUTION_LOG_RETENTION_DAYS:-30}
       ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
       POST_EXEC_WEBHOOK_SECRET: ${POST_EXEC_WEBHOOK_SECRET:-}
       ARKITEKTEN_URL: ${ARKITEKTEN_URL:-}
       ARK_FLODESTJANST_NYCKEL: ${ARK_FLODESTJANST_NYCKEL:-}
+      # Spärr mot interna adresser i kopplingar – se .env.example.
+      CONNECTOR_BLOCK_INTERNAL: ${CONNECTOR_BLOCK_INTERNAL:-auto}
+      CONNECTOR_ALLOWED_HOSTS: ${CONNECTOR_ALLOWED_HOSTS:-}
       ENTRA_TENANT_ID: ${ENTRA_TENANT_ID:-}
       ENTRA_CLIENT_ID: ${ENTRA_CLIENT_ID:-}
       ENTRA_API_SCOPE: ${ENTRA_API_SCOPE:-}
@@ -82,6 +88,9 @@ services:
       target: runtime
     ports:
       - "${WEB_PORT:-3100}:80"
+    environment:
+      # Proxyn framför webben, om någon – se .env.example.
+      TRUSTED_PROXY: ${TRUSTED_PROXY:-}
     depends_on:
       - api
     restart: unless-stopped

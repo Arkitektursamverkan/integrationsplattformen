@@ -5,13 +5,14 @@ import hmac
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import get_db
-from app.services import entra
+from app.services import entra, inloggningssparr
 from app.dependencies import require_admin_auth, get_current_user
 from app.models.user import UserORM
 from app.ratelimit import limiter
@@ -71,16 +72,33 @@ class ChangePasswordRequest(BaseModel):
 # Password guessing: a few attempts a minute per client.
 _LOGIN_LIMIT = "10/minute"
 
+# Jämförs när användaren inte finns, så att svaret tar lika lång tid och inte
+# avslöjar vilka namn som finns.
+_ATTRAPP_HASH = hash_password("ingen-användare")
+
 
 @router.post("/login", response_model=TokenResponse)
 @limiter.limit(_LOGIN_LIMIT)
 async def login(request: Request, body: LoginRequest, db: AsyncSession = Depends(get_db)):
+    # Spärr per användarnamn, utöver gränsen per adress: gissning mot ett
+    # konto från många adresser.
+    kvar = inloggningssparr.spärrad_i(body.username)
+    if kvar:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many failed logins for this user – try again later",
+            headers={"Retry-After": str(kvar)},
+        )
     result = await db.execute(
         select(UserORM).where(UserORM.username == body.username, UserORM.is_active.is_(True))
     )
     user = result.scalar_one_or_none()
-    if not user or not verify_password(body.password, user.password_hash):
+    # bcrypt tar en kvarts sekund: i en tråd, så att andra anrop inte väntar.
+    ok = await run_in_threadpool(verify_password, body.password, user.password_hash if user else _ATTRAPP_HASH)
+    if not user or not ok:
+        inloggningssparr.misslyckades(body.username)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+    inloggningssparr.lyckades(body.username)
 
     return TokenResponse(
         access_token=create_access_token(str(user.id), user.username, user.role),
@@ -121,9 +139,9 @@ async def get_me(user: UserORM = Depends(get_current_user)):
 
 @router.put("/me/password")
 async def change_password(body: ChangePasswordRequest, user: UserORM = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
-    if not verify_password(body.current_password, user.password_hash):
+    if not await run_in_threadpool(verify_password, body.current_password, user.password_hash):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
-    user.password_hash = hash_password(body.new_password)
+    user.password_hash = await run_in_threadpool(hash_password, body.new_password)
     await db.commit()
     return {"message": "Password updated"}
 

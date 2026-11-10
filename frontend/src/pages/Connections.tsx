@@ -111,11 +111,19 @@ export default function Connections() {
     }
 
     try {
-      await updateMutation.mutateAsync({
+      const updated: Connection = await updateMutation.mutateAsync({
         id: editConn.id,
         data: updateData,
       });
-      enqueueSnackbar("Connection updated", { variant: "success" });
+      if (updated.credentials_cleared) {
+        // The platform does not send stored credentials to a new host.
+        enqueueSnackbar(
+          "Connection updated. The address or the TLS check changed, so the stored credentials were removed – edit the connection and enter them again.",
+          { variant: "warning", autoHideDuration: 10000 },
+        );
+      } else {
+        enqueueSnackbar("Connection updated", { variant: "success" });
+      }
       setEditConn(null);
     } catch {
       enqueueSnackbar("Failed to update connection", { variant: "error" });

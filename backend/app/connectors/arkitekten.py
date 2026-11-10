@@ -22,6 +22,7 @@ from __future__ import annotations
 import asyncio
 
 import httpx
+import structlog
 
 # The flow service contract's major version this connector understands
 # (Arkitekten's docs/gransnitt.md). A higher one is refused, not guessed at.
@@ -36,8 +37,11 @@ def _familj(värde: str | None) -> str | None:
     return _ÄLDRE_NAMN.get(värde, värde) if värde else värde
 
 from app.config import settings
+from app.connectors import natverk
 from app.connectors.base import BaseConnector
 from app.connectors.registry import register_connector
+
+log = structlog.get_logger(__name__)
 
 # The scene for a large process (104 objects) is ~112 kB and takes ~2 s to
 # route, so a whole repository is minutes of work. Keep the per-request timeout
@@ -59,12 +63,26 @@ class ArkitektenConnector(BaseConnector):
             raise ValueError("base_url is required (e.g. http://arkitekten.example.org:8200)")
         return url
 
-    @staticmethod
-    def _headers() -> dict[str, str]:
+    def _headers(self) -> dict[str, str]:
         """Arkitektens flödestjänst kräver nyckeln när installationen har en
-        (ARK_FLODESTJANST_NYCKEL, samma värde på båda sidor)."""
+        (ARK_FLODESTJANST_NYCKEL, samma värde på båda sidor).
+
+        Nyckeln skickas bara till den konfigurerade ARKITEKTEN_URL (samma
+        schema, värd och port). Kopplingens adress kan ändras av den som
+        administrerar plattformen – en annan adress ska inte få nyckeln."""
         nyckel = settings.ARK_FLODESTJANST_NYCKEL.strip()
-        return {"X-Arkitekten-Nyckel": nyckel} if nyckel else {}
+        if not nyckel:
+            return {}
+        mål = natverk.ursprung(str(self.config.get("base_url", "")))
+        tillåtet = natverk.arkitekten_ursprung()
+        if mål is None or mål != tillåtet:
+            log.warning(
+                "arkitekten.nyckel_ej_skickad",
+                base_url=self.config.get("base_url"),
+                skäl="kopplingens adress är inte ARKITEKTEN_URL" if tillåtet else "ARKITEKTEN_URL är inte satt",
+            )
+            return {}
+        return {"X-Arkitekten-Nyckel": nyckel}
 
     def _timeout(self) -> float:
         return float(self.config.get("timeout", _DEFAULT_TIMEOUT))
@@ -154,7 +172,7 @@ class ArkitektenConnector(BaseConnector):
         include_scene = self.config.get("include_scene", True)
         version = self.config.get("version", "fastslagen")
 
-        async with httpx.AsyncClient(
+        async with natverk.klient(
             timeout=self._timeout(), verify=self._verify_ssl(), headers=self._headers()
         ) as client:
             resp = await client.get(f"{self._base_url()}/api/flows")
@@ -213,7 +231,7 @@ class ArkitektenConnector(BaseConnector):
 
     async def test_connection(self) -> bool:
         try:
-            async with httpx.AsyncClient(
+            async with natverk.klient(
                 timeout=10.0, verify=self._verify_ssl(), headers=self._headers()
             ) as client:
                 # /api/flows, inte /health: /health är öppen och säger inget om

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  Box, Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle,
+  Autocomplete, Box, Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle,
   IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   TextField, Typography,
 } from "@mui/material";
@@ -11,6 +11,7 @@ import {
 } from "@mui/icons-material";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import client from "@/api/client";
+import { useFlows, type Flow } from "@/api/flows";
 import { useSnackbar } from "notistack";
 import { copyToClipboard } from "@/utils/clipboard";
 
@@ -37,6 +38,14 @@ export default function Settings() {
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [keyName, setKeyName] = useState("");
+  // Empty = the key may read every flow; otherwise only these (flow:<id> scopes).
+  const [keyFlows, setKeyFlows] = useState<Flow[]>([]);
+  const { data: flows } = useFlows();
+  const flowName = (scope: string) => {
+    if (!scope.startsWith("flow:")) return scope;
+    const id = scope.slice(5);
+    return `flow: ${flows?.find((f) => f.id === id)?.name ?? id}`;
+  };
   const [createdKey, setCreatedKey] = useState<CreatedKey | null>(null);
 
   const { data: keys } = useQuery<ApiKey[]>({
@@ -45,11 +54,14 @@ export default function Settings() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (name: string) => client.post("/api-keys", { name, scopes: ["data:read"] }).then((r) => r.data),
+    mutationFn: ({ name, flowIds }: { name: string; flowIds: string[] }) =>
+      client.post("/api-keys", { name, scopes: ["data:read", ...flowIds.map((id) => `flow:${id}`)] })
+        .then((r) => r.data),
     onSuccess: (data: CreatedKey) => {
       qc.invalidateQueries({ queryKey: ["api-keys"] });
       setCreatedKey(data);
       setKeyName("");
+      setKeyFlows([]);
     },
   });
 
@@ -143,7 +155,7 @@ export default function Settings() {
               <TableRow key={k.id}>
                 <TableCell>{k.name}</TableCell>
                 <TableCell sx={{ fontFamily: "monospace" }}>{k.key_prefix}...</TableCell>
-                <TableCell>{k.scopes.join(", ")}</TableCell>
+                <TableCell>{k.scopes.map(flowName).join(", ")}</TableCell>
                 <TableCell>{new Date(k.created_at).toLocaleDateString()}</TableCell>
                 <TableCell align="right">
                   <IconButton size="small" color="error" onClick={() => deleteMutation.mutate(k.id)}>
@@ -161,11 +173,25 @@ export default function Settings() {
         <DialogTitle>{createdKey ? "API Key Created" : "New API Key"}</DialogTitle>
         <DialogContent>
           {!createdKey ? (
-            <TextField
-              label="Key Name" fullWidth required sx={{ mt: 1 }}
-              value={keyName} onChange={(e) => setKeyName(e.target.value)}
-              placeholder="e.g. EA Application Production"
-            />
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+              <TextField
+                label="Key Name" fullWidth required
+                value={keyName} onChange={(e) => setKeyName(e.target.value)}
+                placeholder="e.g. EA Application Production"
+              />
+              <Autocomplete
+                multiple
+                options={flows ?? []}
+                getOptionLabel={(f) => f.name}
+                isOptionEqualToValue={(a, b) => a.id === b.id}
+                value={keyFlows}
+                onChange={(_, v) => setKeyFlows(v)}
+                renderInput={(params) => (
+                  <TextField {...params} label="Limit to flows (optional)"
+                    helperText="Empty = the key can read the data of every flow." />
+                )}
+              />
+            </Box>
           ) : (
             <Box>
               <Typography variant="body2" gutterBottom sx={{ color: "warning.main" }}>
@@ -186,7 +212,7 @@ export default function Settings() {
           {!createdKey ? (
             <>
               <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button variant="contained" onClick={() => createMutation.mutate(keyName)} disabled={!keyName}>Create</Button>
+              <Button variant="contained" onClick={() => createMutation.mutate({ name: keyName, flowIds: keyFlows.map((f) => f.id) })} disabled={!keyName}>Create</Button>
             </>
           ) : (
             <Button variant="contained" onClick={() => { setDialogOpen(false); setCreatedKey(null); }}>Done</Button>

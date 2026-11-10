@@ -12,6 +12,11 @@ export interface Connection {
   last_tested_at: string | null;
   created_at: string;
   updated_at: string;
+  // Whether credentials are stored (they are never returned).
+  has_credentials?: boolean;
+  // Only in the reply to an update: the address's host or the TLS check
+  // changed, so the stored credentials were removed and must be entered again.
+  credentials_cleared?: boolean;
 }
 
 export interface ConnectionCreate {

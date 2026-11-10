@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import hmac
+import uuid
 from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from starlette.concurrency import run_in_threadpool
 from jose import JWTError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -154,7 +156,8 @@ async def require_data_access(
         )
         # Prefixes are not unique: try each key that shares it.
         for api_key in result.scalars().all():
-            if verify_password(x_api_key, api_key.key_hash):
+            # bcrypt i en tråd, så att andra anrop inte väntar.
+            if await run_in_threadpool(verify_password, x_api_key, api_key.key_hash):
                 expires_at = api_key.expires_at
                 if expires_at and expires_at.tzinfo is None:
                     expires_at = expires_at.replace(tzinfo=timezone.utc)
@@ -163,6 +166,58 @@ async def require_data_access(
                 return api_key
 
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+
+
+# ── Konsumentnycklarnas scopes ───────────────────────────────────────────────
+#
+# data:read krävs för data-API:t. En nyckel med ett eller flera flow:<uuid>
+# får bara läsa de flödena; utan flow:-scope gäller den alla flöden, som förut.
+# Administratörsnyckeln och inloggade användare begränsas inte.
+
+SCOPE_DATA_READ = "data:read"
+SCOPE_FLOW_PREFIX = "flow:"
+
+
+def flöden_i_scopes(scopes: list[str] | None) -> set[uuid.UUID] | None:
+    """Flödena en nyckel begränsas till, None = alla. Ett flow:-scope som inte
+    är ett uuid ger ingen åtkomst (men gör ändå nyckeln begränsad)."""
+    flöden: set[uuid.UUID] = set()
+    begränsad = False
+    for scope in scopes or []:
+        if isinstance(scope, str) and scope.startswith(SCOPE_FLOW_PREFIX):
+            begränsad = True
+            try:
+                flöden.add(uuid.UUID(scope[len(SCOPE_FLOW_PREFIX):]))
+            except ValueError:
+                pass
+    return flöden if begränsad else None
+
+
+async def require_data_read(
+    principal: ApiKeyORM | UserORM | None = Depends(require_data_access),
+) -> ApiKeyORM | UserORM | None:
+    """Data-API:t: konsumentnyckeln måste ha scopet data:read."""
+    if isinstance(principal, ApiKeyORM) and SCOPE_DATA_READ not in (principal.scopes or []):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="API key lacks the data:read scope")
+    return principal
+
+
+def tillåtna_flöden(principal: ApiKeyORM | UserORM | None) -> set[uuid.UUID] | None:
+    """Flödena anroparen får läsa, None = alla."""
+    if isinstance(principal, ApiKeyORM):
+        return flöden_i_scopes(principal.scopes)
+    return None
+
+
+async def require_flow_read(
+    flow_id: uuid.UUID,
+    principal: ApiKeyORM | UserORM | None = Depends(require_data_read),
+) -> ApiKeyORM | UserORM | None:
+    """Data-API:t för ett flöde: nyckeln får läsa just det flödet."""
+    flöden = tillåtna_flöden(principal)
+    if flöden is not None and flow_id not in flöden:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="API key is not allowed to read this flow")
+    return principal
 
 
 # ── Legacy aliases (for backwards compatibility during migration) ─────────────

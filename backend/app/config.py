@@ -62,9 +62,23 @@ class Settings(BaseSettings):
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
     # Rate limits count per client address. Behind nginx or a platform proxy
-    # that is the proxy's; true = take the first X-Forwarded-For entry instead.
+    # that is the proxy's; true = take the client from X-Forwarded-For instead.
     # Only when the API is reachable through that proxy alone (see ratelimit.py).
     TRUST_PROXY_HEADERS: bool = False
+    # Hur många proxyer framför API:t som lägger till ett led i X-Forwarded-For.
+    # Klienten är ledet så många steg från HÖGER – led längre till vänster kan
+    # anroparen själv ha skrivit. Webbens nginx ensam = 1.
+    TRUSTED_PROXY_COUNT: int = 1
+
+    @field_validator("TRUSTED_PROXY_COUNT")
+    @classmethod
+    def minst_en_proxy(cls, v: int) -> int:
+        return max(1, v)
+
+    # Spärr per användarnamn vid inloggning, utöver gränsen per adress:
+    # så många misslyckade försök inom fönstret låser kontot tillfälligt.
+    LOGIN_MAX_FAILURES: int = 10
+    LOGIN_FAILURE_WINDOW_SECONDS: int = 15 * 60
 
     # ── App ──────────────────────────────────────────────────────────────────
     # Production unless said otherwise: then weak or placeholder secrets stop
@@ -90,9 +104,10 @@ class Settings(BaseSettings):
     # ── Retention & Alerting ─────────────────────────────────────────────────
     EXECUTION_LOG_RETENTION_DAYS: int = 30
     ALERT_WEBHOOK_URL: str = ""
-    # Sent as X-Webhook-Secret on post-execution webhooks, so the receiver
-    # (e.g. Arkitekturportalen's SYNC_WEBHOOK_SECRET) can tell them from anyone
-    # else's calls. Empty = no header.
+    # Signerar webhooken efter en körning (X-Webhook-Timestamp och
+    # X-Webhook-Signature = HMAC-SHA256), så att mottagaren (t.ex.
+    # Arkitekturportalens SYNC_WEBHOOK_SECRET) kan skilja den från andras
+    # anrop. Själva hemligheten skickas aldrig. Tomt = osignerad.
     POST_EXEC_WEBHOOK_SECRET: str = ""
 
     # ── Entra (samma app-registrering som portalen och Arkitekten) ───────────
@@ -124,7 +139,19 @@ class Settings(BaseSettings):
     ARKITEKTEN_URL: str = ""
     # Arkitektens flödestjänst kräver den här nyckeln (huvudet
     # X-Arkitekten-Nyckel) när den har en – samma värde som där. Tomt = ingen.
+    # Skickas bara till samma schema, värd och port som ARKITEKTEN_URL.
     ARK_FLODESTJANST_NYCKEL: str = ""
+
+    # ── Kopplingarnas nätverk (SSRF-spärr) ───────────────────────────────────
+    # Kopplingar (REST, 2C8, Arkitekten) får inte anropa interna adresser –
+    # loopback, länklokala (t.ex. 169.254.169.254), privata och reserverade –
+    # så att den som kan skapa en koppling inte kan nå tjänster bakom
+    # brandväggen. auto = på utom i development/test; true/false = alltid.
+    CONNECTOR_BLOCK_INTERNAL: str = "auto"
+    # Interna mål som ändå är tillåtna, kommaseparerade: värdnamn (arkitekten),
+    # domäner (*.intern.example), adresser (10.1.2.3) eller nät (10.0.0.0/8).
+    # Värden i ARKITEKTEN_URL är alltid tillåten.
+    CONNECTOR_ALLOWED_HOSTS: str = ""
 
 
 settings = Settings()
