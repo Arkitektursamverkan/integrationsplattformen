@@ -9,6 +9,15 @@ funktioner, en ny korrigering för rättelser.
 
 - (inget än)
 
+## 0.7.0 – 2026-11-10
+
+- **Säkerhet: kopplingar når inte interna adresser i produktion** (loopback, länklokala inkl. 169.254.169.254, privata, 100.64/10, reserverade; omdirigeringar följs inte). Interna mål tillåts med nya `CONNECTOR_ALLOWED_HOSTS` (värdnamn, `*.domän`, IP eller CIDR); värden i `ARKITEKTEN_URL` är alltid tillåten. `CONNECTOR_BLOCK_INTERNAL=false` stänger av spärren. **En installation som hämtar från interna system måste sätta `CONNECTOR_ALLOWED_HOSTS` vid uppgraderingen.**
+- **Säkerhet: webhooken efter en körning signeras** (`X-Webhook-Timestamp` + `X-Webhook-Signature`, HMAC-SHA256) och hemligheten skickas aldrig. Kräver Arkitekturportalen 0.13.0 eller senare – uppgradera portalen först.
+- **Säkerhet: Arkitektens nyckel skickas bara till värden i `ARKITEKTEN_URL`.** Sparade inloggningsuppgifter i en koppling töms när värden eller `verify_ssl` ändras.
+- **Säkerhet: konsumentnycklarnas scopes verkställs** – `data:read` krävs, och nya `flow:<uuid>` begränsar en nyckel till vissa flöden. Befintliga nycklar utan scopes får `data:read` (migrering 0005).
+- **Säkerhet: anropsgränser bakom proxy** – nginx skickar klientens adress i stället för att lägga till den, nya `TRUSTED_PROXY` (webben) och `TRUSTED_PROXY_COUNT` (API:t, led räknat från höger). Inloggningen spärras efter 10 misslyckade försök per användarnamn på 15 minuter, och bcrypt körs utanför event-loopen.
+- Webbens beroenden installeras med `npm ci`. CI har bara läsbehörighet och actions är låsta till commit-SHA.
+
 ## 0.6.0 – 2026-11-09
 
 - Arkitekten-källan skickar `ARK_FLODESTJANST_NYCKEL` som `X-Arkitekten-Nyckel` till Arkitektens flödestjänst (Arkitekten 0.7.0 kräver den när den är satt där), och "Testa anslutning" prövar nu en väg som kräver nyckeln.
