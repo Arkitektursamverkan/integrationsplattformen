@@ -60,7 +60,7 @@ export default function Setup() {
             {setup.data?.code_required && (
               <TextField label="Engångskod" fullWidth required value={setupCode} autoComplete="off"
                 onChange={(e) => setSetupCode(e.target.value)} sx={{ mb: 2 }}
-                helperText="SETUP_CODE från installationen (på Render: portal-api → Environment)" />
+                helperText="SETUP_CODE från installationen (på Render: plattform-api → Environment)" />
             )}
             <TextField label="Användarnamn" fullWidth required value={username} autoComplete="username"
               onChange={(e) => setUsername(e.target.value)} sx={{ mb: 2 }} autoFocus />

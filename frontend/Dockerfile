@@ -10,7 +10,12 @@ COPY . .
 RUN npm run build
 
 # ── Runtime (nginx) ────────────────────────────────────────────────────────────
-FROM nginx:1.31-alpine AS runtime
+# nginx-unprivileged: samma nginx, men den kör som användaren nginx (101) och
+# inte som root. Den lyssnar ändå på PORT (80): Docker tillåter låga portar
+# för vanliga användare i en container (net.ipv4.ip_unprivileged_port_start=0
+# är standard sedan Docker 20.10), så compose-filer och proxyer som pekar på
+# :80 fungerar som förut. En miljö som inte tillåter det: sätt PORT=8080.
+FROM nginxinc/nginx-unprivileged:1.31-alpine AS runtime
 
 # The release workflow passes the tag (e.g. 0.1.0).
 ARG APP_VERSION=dev

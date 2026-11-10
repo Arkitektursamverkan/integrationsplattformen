@@ -39,13 +39,17 @@ def _parse_cron(expression: str, tz: str = "UTC") -> CronTrigger:
 
 async def _run_scheduled_flow(schedule_id: str, flow_id: str) -> None:
     """Execute a flow triggered by the scheduler."""
-    from app.services.flow_service import execute_flow
+    from app.services.flow_service import FlowDisabled, execute_flow
 
     log.info("scheduler.trigger", schedule_id=schedule_id, flow_id=flow_id)
     async with async_session() as db:
         try:
             import uuid
-            execution = await execute_flow(db, uuid.UUID(flow_id), trigger_type="schedule")
+            try:
+                execution = await execute_flow(db, uuid.UUID(flow_id), trigger_type="schedule")
+            except FlowDisabled:
+                # Inaktiverat flöde: schemat står kvar men kör inget.
+                return
             log.info(
                 "scheduler.done",
                 schedule_id=schedule_id,

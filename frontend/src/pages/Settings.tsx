@@ -11,6 +11,7 @@ import {
 } from "@mui/icons-material";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import client from "@/api/client";
+import { setTokens } from "@/api/auth";
 import { useFlows, type Flow } from "@/api/flows";
 import { useSnackbar } from "notistack";
 import { copyToClipboard } from "@/utils/clipboard";
@@ -98,7 +99,9 @@ export default function Settings() {
       return;
     }
     try {
-      await changePasswordMutation.mutateAsync({ current_password: currentPassword, new_password: newPassword });
+      const svar = await changePasswordMutation.mutateAsync({ current_password: currentPassword, new_password: newPassword });
+      // Bytet gör alla tidigare token ogiltiga; svaret har nya för den här sessionen.
+      if (svar?.access_token) setTokens(svar);
       enqueueSnackbar("Password changed", { variant: "success" });
       setCurrentPassword("");
       setNewPassword("");

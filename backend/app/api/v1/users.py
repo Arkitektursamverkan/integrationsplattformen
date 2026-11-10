@@ -18,6 +18,7 @@ from app.models.user import UserORM
 from app.ratelimit import limiter
 from app.services.auth_service import (
     hash_password, verify_password, create_access_token, create_refresh_token, decode_token,
+    token_version_stämmer,
 )
 
 router = APIRouter()
@@ -40,7 +41,10 @@ class TokenResponse(BaseModel):
 
 class RegisterRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=100)
-    password: str = Field(..., min_length=8)
+    # Utan lösenord = ett konto för Microsoft-inloggning: det kopplas till
+    # Entra-kontot med samma e-post vid första inloggningen. Ett konto med
+    # lösenord kopplas aldrig automatiskt (services/entra.py).
+    password: str | None = Field(None, min_length=8)
     email: str | None = None
     full_name: str | None = None
     role: str = Field(default="viewer")
@@ -68,6 +72,17 @@ class ChangePasswordRequest(BaseModel):
 
 
 # ── Auth endpoints ────────────────────────────────────────────────────────────
+
+def _tokens(user: UserORM) -> TokenResponse:
+    """Plattformens tokens för användaren, med hans nuvarande tokenversion."""
+    tv = user.token_version or 0
+    return TokenResponse(
+        access_token=create_access_token(str(user.id), user.username, user.role, tv),
+        refresh_token=create_refresh_token(str(user.id), tv),
+        role=user.role,
+        username=user.username,
+    )
+
 
 # Password guessing: a few attempts a minute per client.
 _LOGIN_LIMIT = "10/minute"
@@ -100,12 +115,7 @@ async def login(request: Request, body: LoginRequest, db: AsyncSession = Depends
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
     inloggningssparr.lyckades(body.username)
 
-    return TokenResponse(
-        access_token=create_access_token(str(user.id), user.username, user.role),
-        refresh_token=create_refresh_token(str(user.id)),
-        role=user.role,
-        username=user.username,
-    )
+    return _tokens(user)
 
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -115,7 +125,9 @@ async def refresh_token(body: dict, db: AsyncSession = Depends(get_db)):
         payload = decode_token(token)
         if payload.get("type") != "refresh":
             raise HTTPException(status_code=401, detail="Invalid token type")
-        user_id = payload.get("sub")
+        user_id = uuid.UUID(str(payload.get("sub")))
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
@@ -123,13 +135,11 @@ async def refresh_token(body: dict, db: AsyncSession = Depends(get_db)):
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+    # Lösenordsbyte eller "logga ut överallt" sedan token utfärdades.
+    if not token_version_stämmer(payload, user.token_version):
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
 
-    return TokenResponse(
-        access_token=create_access_token(str(user.id), user.username, user.role),
-        refresh_token=create_refresh_token(str(user.id)),
-        role=user.role,
-        username=user.username,
-    )
+    return _tokens(user)
 
 
 @router.get("/me", response_model=UserResponse)
@@ -142,8 +152,20 @@ async def change_password(body: ChangePasswordRequest, user: UserORM = Depends(g
     if not await run_in_threadpool(verify_password, body.current_password, user.password_hash):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
     user.password_hash = await run_in_threadpool(hash_password, body.new_password)
+    # Alla utfärdade token (även den här sessionens) slutar gälla: den som
+    # kommit åt ett gammalt lösenord eller en stulen token loggas ut.
+    user.token_version = (user.token_version or 0) + 1
     await db.commit()
-    return {"message": "Password updated"}
+    # Nya token för den som bytte, så att webben inte loggas ut.
+    return {"message": "Password updated", **_tokens(user).model_dump()}
+
+
+@router.post("/me/logout-all")
+async def logout_everywhere(user: UserORM = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """Logga ut överallt: alla utfärdade token för kontot slutar gälla."""
+    user.token_version = (user.token_version or 0) + 1
+    await db.commit()
+    return {"message": "Logged out everywhere"}
 
 
 # ── Setup: create first admin user ────────────────────────────────────────────
@@ -192,15 +214,11 @@ async def login_entra(request: Request, body: EntraLoginRequest, db: AsyncSessio
         raise HTTPException(status_code=403, detail=str(e))
     except entra.EntraError as e:
         raise HTTPException(status_code=401, detail=str(e))
-    return TokenResponse(
-        access_token=create_access_token(str(user.id), user.username, user.role),
-        refresh_token=create_refresh_token(str(user.id)),
-        role=user.role,
-        username=user.username,
-    )
+    return _tokens(user)
 
 
 class SetupRequest(RegisterRequest):
+    password: str = Field(..., min_length=8)
     setup_code: str | None = None
 
 
@@ -214,7 +232,8 @@ async def initial_setup(request: Request, body: SetupRequest, db: AsyncSession =
     if settings.setup_code_required():
         if not settings.SETUP_CODE:
             raise HTTPException(status_code=403, detail="SETUP_CODE is not set – the first admin cannot be created without it.")
-        if not hmac.compare_digest((body.setup_code or "").strip(), settings.SETUP_CODE):
+        # Byte på båda sidor: compare_digest tål inte tecken utanför ASCII i str.
+        if not hmac.compare_digest((body.setup_code or "").strip().encode(), settings.SETUP_CODE.encode()):
             raise HTTPException(status_code=403, detail="Wrong setup code.")
     count = (await db.execute(select(func.count(UserORM.id)))).scalar() or 0
     if count > 0:
@@ -232,12 +251,7 @@ async def initial_setup(request: Request, body: SetupRequest, db: AsyncSession =
     db.add(user)
     await db.commit()
 
-    return TokenResponse(
-        access_token=create_access_token(str(user.id), user.username, user.role),
-        refresh_token=create_refresh_token(str(user.id)),
-        role=user.role,
-        username=user.username,
-    )
+    return _tokens(user)
 
 
 # ── User management (admin only) ─────────────────────────────────────────────
@@ -258,7 +272,7 @@ async def create_user(body: RegisterRequest, db: AsyncSession = Depends(get_db))
         id=uuid.uuid4(),
         username=body.username,
         email=body.email,
-        password_hash=hash_password(body.password),
+        password_hash=hash_password(body.password) if body.password else entra.INGET_LÖSENORD,
         full_name=body.full_name,
         role=body.role,
         is_active=True,

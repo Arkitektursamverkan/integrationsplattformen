@@ -16,6 +16,20 @@ _PLACEHOLDER_SECRETS = {
 }
 
 
+# Databaslösenord som har stått som standard i compose-filer och exempel.
+_STANDARD_DB_LÖSENORD = {"integration_pass", "postgres", "password", "changeme", "change-me"}
+
+
+def _db_lösenord(url: str) -> str | None:
+    """Lösenordet i en databasadress, None om den inte har något."""
+    from urllib.parse import unquote, urlsplit
+    try:
+        lösen = urlsplit(url).password
+    except ValueError:
+        return None
+    return unquote(lösen) if lösen is not None else None
+
+
 def asyncpg_url(raw: str) -> str:
     """A PostgreSQL URL in the form SQLAlchemy's asyncpg driver needs.
 
@@ -92,13 +106,18 @@ class Settings(BaseSettings):
         """Secrets that are empty, a known placeholder or too short to guess-proof.
 
         ADMIN_API_KEY is an admin, JWT_SECRET signs logins and ENCRYPTION_KEY
-        protects stored connection credentials. Anything but development/test
+        protects stored connection credentials. DATABASE_URL counts when its
+        password is a known default such as integration_pass. Anything but development/test
         refuses to start with them (see main.lifespan)."""
         weak = []
         for name in ("ENCRYPTION_KEY", "ADMIN_API_KEY", "JWT_SECRET"):
             value = getattr(self, name)
             if value in _PLACEHOLDER_SECRETS or len(value) < 32:
                 weak.append(name)
+        # Ett känt standardlösenord för databasen (docker-compose.yml hade
+        # integration_pass som förval).
+        if _db_lösenord(self.DATABASE_URL) in _STANDARD_DB_LÖSENORD:
+            weak.append("DATABASE_URL")
         return weak
 
     # ── Retention & Alerting ─────────────────────────────────────────────────
@@ -116,8 +135,14 @@ class Settings(BaseSettings):
     ENTRA_TENANT_ID: str = ""
     ENTRA_CLIENT_ID: str = ""
     ENTRA_API_SCOPE: str = ""
-    # De här adresserna blir administratörer vid första Entra-inloggningen.
-    # Andra måste först läggas till av en administratör (med samma e-post).
+    # Scopet (scp) en token måste ha för att godtas här, t.ex. Plattform.Access.
+    # Tomt = sista delen av ENTRA_API_SCOPE (access_as_user) – samma som
+    # portalen och Arkitekten, så att deras token godtas här också. Se
+    # docs/sakerhet.md om ett eget scope eller en egen app-registrering.
+    ENTRA_REQUIRED_SCOPE: str = ""
+    # De här adresserna blir administratörer vid sin första Entra-inloggning –
+    # bara så länge installationen saknar administratör. Andra måste först
+    # läggas till av en administratör (med samma e-post, utan lösenord).
     BOOTSTRAP_ADMIN_EMAILS: str = ""
 
     # One-time code for creating the first admin at /setup. In production the

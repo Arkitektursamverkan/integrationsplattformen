@@ -10,18 +10,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.connectors import natverk
 from app.connectors.registry import get_connector_class, list_connector_types
 from app.database import get_db
-from app.dependencies import require_admin_key
+from app.dependencies import require_admin_key, require_auth
 from app.models.connection import ConnectionORM
 from app.schemas.connection import ConnectionCreate, ConnectionRead, ConnectionUpdate
 from app.services.crypto_service import decrypt_credentials, encrypt_credentials
+from app.services.maskering import maskera_config, återställ_maskerat, är_admin
 
 router = APIRouter()
 
 
+def _för(principal, conn: ConnectionORM) -> ConnectionRead:
+    """Kopplingen som anroparen får se: huvuden och nycklar i config är dolda
+    för alla utom administratörer."""
+    läst = ConnectionRead.model_validate(conn)
+    if är_admin(principal):
+        return läst
+    return läst.model_copy(update={"config": maskera_config(conn.config)})
+
+
 @router.get("", response_model=list[ConnectionRead])
-async def list_connections(db: AsyncSession = Depends(get_db)):
+async def list_connections(db: AsyncSession = Depends(get_db), principal=Depends(require_auth)):
     result = await db.execute(select(ConnectionORM).order_by(ConnectionORM.created_at.desc()))
-    return result.scalars().all()
+    return [_för(principal, c) for c in result.scalars().all()]
 
 
 @router.get("/types")
@@ -31,12 +41,14 @@ async def list_types():
 
 
 @router.get("/{connection_id}", response_model=ConnectionRead)
-async def get_connection(connection_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def get_connection(
+    connection_id: uuid.UUID, db: AsyncSession = Depends(get_db), principal=Depends(require_auth),
+):
     result = await db.execute(select(ConnectionORM).where(ConnectionORM.id == connection_id))
     conn = result.scalar_one_or_none()
     if not conn:
         raise HTTPException(status_code=404, detail="Connection not found")
-    return conn
+    return _för(principal, conn)
 
 
 @router.post("", response_model=ConnectionRead, status_code=201, dependencies=[Depends(require_admin_key)])
@@ -97,6 +109,8 @@ async def update_connection(
     nya_uppgifter = bool(body.credentials) and any(v for v in body.credentials.values() if v)
     cleared = False
     if body.config is not None:
+        # Ett dolt värde som skickas tillbaka oförändrat behåller det sparade.
+        body.config = återställ_maskerat(body.config, conn.config or {})
         # Ny värd (eller schema/port) eller ändrad certifikatprövning: sparade
         # uppgifter skulle annars skickas till ett mål som inte är det de
         # angavs för. De töms och måste anges igen, om inte nya kommer nu.

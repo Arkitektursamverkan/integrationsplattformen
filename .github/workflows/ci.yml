@@ -118,6 +118,7 @@ jobs:
         run: |
           docker network create arkitekturportalen
           COMPOSE_FILE=docker-compose.yml:deploy/shared-network.yml docker compose config --quiet
+          COMPOSE_FILE=docker-compose.yml:deploy/api-port.yml docker compose config --quiet
 
       - name: Tear down
         if: always()

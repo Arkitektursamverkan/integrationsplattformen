@@ -9,7 +9,7 @@ architecture portal, on a schedule or on demand.
 |---|---|
 | `backend/` | FastAPI + SQLAlchemy (PostgreSQL), APScheduler with Redis |
 | `frontend/` | React + MUI: connections, flows, schedules, executions |
-| `mcp-server/` | MCP server exposing the API as tools for AI agents |
+| `mcp-server/` | MCP server exposing the API as tools for AI agents (`MCP_READ_ONLY=1` = read tools only; see [docs/sakerhet.md](docs/sakerhet.md#mcp-servern) about prompt injection) |
 
 Connectors live in `backend/app/connectors/` (one class per source system,
 registered in `registry.py`). Stored credentials are encrypted with
@@ -33,8 +33,11 @@ cp .env.example .env    # APP_ENV=development for placeholder secrets
 docker compose up -d --build
 ```
 
-The web UI is on http://localhost:3100 and the API on
-http://localhost:8100/api/docs. On first visit the UI asks for the first
+Set `POSTGRES_PASSWORD` in `.env` first (`openssl rand -hex 16`) – compose
+refuses to start without it. The web UI is on http://localhost:3100 and the
+API documentation on http://localhost:3100/api/docs. The API's own port is not
+published; for http://localhost:8100 add `deploy/api-port.yml` to
+`COMPOSE_FILE` in `.env`. On first visit the UI asks for the first
 administrator.
 
 Tests run on SQLite (see `backend/requirements-dev.txt`):
