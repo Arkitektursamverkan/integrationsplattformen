@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
+import time
 import uuid
 from datetime import datetime, timezone
 
@@ -252,6 +254,25 @@ async def _send_failure_alert(flow_id: uuid.UUID, trigger_type: str, error: str)
         log.warning("alert.failed", flow_id=str(flow_id), error=str(exc))
 
 
+def webhook_signatur(body: bytes, timestamp: int | None = None) -> dict[str, str]:
+    """Huvudena som signerar webhooken efter en körning.
+
+    Hemligheten (POST_EXEC_WEBHOOK_SECRET) skickas aldrig – adressen styrs av
+    den som administrerar flödet, och en hemlighet i klartext vore läst av
+    vem som helst den pekar på. I stället:
+      X-Webhook-Timestamp: unix-sekunder
+      X-Webhook-Signature: sha256=<hex HMAC-SHA256(hemligheten, "<timestamp>." + kroppen)>
+    Mottagaren (Arkitekturportalens /sync/webhook) räknar om signaturen över
+    den råa kroppen och godtar bara en färsk tidsstämpel. Utan hemlighet: inga huvuden.
+    """
+    secret = settings.POST_EXEC_WEBHOOK_SECRET
+    if not secret:
+        return {}
+    ts = int(time.time()) if timestamp is None else timestamp
+    digest = hmac.new(secret.encode("utf-8"), f"{ts}.".encode() + body, hashlib.sha256).hexdigest()
+    return {"X-Webhook-Timestamp": str(ts), "X-Webhook-Signature": f"sha256={digest}"}
+
+
 async def _send_post_exec_webhook(
     url: str,
     flow_id: uuid.UUID,
@@ -272,12 +293,12 @@ async def _send_post_exec_webhook(
         "records_updated": records_updated,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
-    headers = {}
-    if settings.POST_EXEC_WEBHOOK_SECRET:
-        headers["X-Webhook-Secret"] = settings.POST_EXEC_WEBHOOK_SECRET
+    # Kroppen serialiseras en gång: det som signeras är exakt det som skickas.
+    body = json.dumps(payload).encode()
+    headers = {"Content-Type": "application/json", **webhook_signatur(body)}
     try:
         async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.post(url, json=payload, headers=headers)
+            resp = await client.post(url, content=body, headers=headers)
         log.info("post_exec_webhook.sent", flow_id=str(flow_id), url=url, status=resp.status_code)
     except Exception as exc:
         log.warning("post_exec_webhook.failed", flow_id=str(flow_id), url=url, error=str(exc))

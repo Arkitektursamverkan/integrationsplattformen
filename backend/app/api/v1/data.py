@@ -7,11 +7,12 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.dependencies import require_consumer_key
+from app.dependencies import require_data_read, require_flow_read, tillåtna_flöden
 from app.models.api_key import ApiKeyORM
 from app.models.data_record import DataRecordORM
 from app.models.execution_log import ExecutionLogORM
 from app.models.flow import FlowORM
+from app.models.user import UserORM
 from app.models.connection import ConnectionORM
 from app.ratelimit import limiter
 from app.schemas.data import DataRecordList, DataRecordRead, DataSourceSummary
@@ -25,14 +26,19 @@ _VISIBLE = DataRecordORM.source_type != "csv_original"
 @router.get("/sources", response_model=list[DataSourceSummary])
 async def list_data_sources(
     db: AsyncSession = Depends(get_db),
-    _api_key: ApiKeyORM = Depends(require_consumer_key),
+    principal: ApiKeyORM | UserORM | None = Depends(require_data_read),
 ):
     """List available data sources (flows with records)."""
-    result = await db.execute(
+    query = (
         select(FlowORM, ConnectionORM)
         .join(ConnectionORM, FlowORM.connection_id == ConnectionORM.id)
         .where(FlowORM.enabled.is_(True))
     )
+    # En nyckel med flow:-scopes ser bara sina flöden.
+    flöden = tillåtna_flöden(principal)
+    if flöden is not None:
+        query = query.where(FlowORM.id.in_(flöden))
+    result = await db.execute(query)
     rows = result.all()
 
     sources = []
@@ -69,7 +75,7 @@ async def list_records(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
-    _api_key: ApiKeyORM = Depends(require_consumer_key),
+    _api_key: ApiKeyORM = Depends(require_flow_read),
 ):
     count_result = await db.execute(
         select(func.count(DataRecordORM.id)).where(DataRecordORM.flow_id == flow_id, _VISIBLE)
@@ -96,7 +102,7 @@ async def get_record_by_external_id(
     flow_id: uuid.UUID,
     external_id: str,
     db: AsyncSession = Depends(get_db),
-    _api_key: ApiKeyORM = Depends(require_consumer_key),
+    _api_key: ApiKeyORM = Depends(require_flow_read),
 ):
     result = await db.execute(
         select(DataRecordORM).where(
@@ -118,7 +124,7 @@ async def list_changes(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
-    _api_key: ApiKeyORM = Depends(require_consumer_key),
+    _api_key: ApiKeyORM = Depends(require_flow_read),
 ):
     """Return records changed since a given timestamp (delta sync)."""
     base_query = select(DataRecordORM).where(
@@ -151,7 +157,7 @@ async def list_changes(
 async def get_flow_summary(
     flow_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _api_key: ApiKeyORM = Depends(require_consumer_key),
+    _api_key: ApiKeyORM = Depends(require_flow_read),
 ):
     count_result = await db.execute(
         select(func.count(DataRecordORM.id)).where(DataRecordORM.flow_id == flow_id, _VISIBLE)

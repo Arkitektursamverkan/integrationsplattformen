@@ -1,8 +1,7 @@
 """Generic REST connector — configurable for any REST API."""
 from __future__ import annotations
 
-import httpx
-
+from app.connectors import natverk
 from app.connectors.base import BaseConnector
 from app.connectors.registry import register_connector
 
@@ -25,7 +24,7 @@ class GenericRestConnector(BaseConnector):
             header_name = self.config.get("api_key_header", "X-Api-Key")
             headers[header_name] = self.credentials.get("api_key", "")
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with natverk.klient(timeout=30.0) as client:
             if method == "GET":
                 resp = await client.get(url, headers=headers, params=query_params)
             else:

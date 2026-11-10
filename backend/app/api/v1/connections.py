@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.connectors import natverk
 from app.connectors.registry import get_connector_class, list_connector_types
 from app.database import get_db
 from app.dependencies import require_admin_key
@@ -59,6 +60,27 @@ async def create_connection(body: ConnectionCreate, db: AsyncSession = Depends(g
     return conn
 
 
+# Där kopplingarna har sin adress (generic_rest: url, 2C8 och Arkitekten: base_url).
+_ADRESSFÄLT = ("url", "base_url")
+
+
+def _som_bool(värde: object, standard: bool = True) -> bool:
+    if värde is None:
+        return standard
+    if isinstance(värde, str):
+        return värde.strip().lower() not in ("false", "0", "no", "off", "")
+    return bool(värde)
+
+
+def _mål(config: dict | None) -> tuple:
+    """Vart uppgifterna skickas: adressernas ursprung och om certifikatet prövas."""
+    config = config or {}
+    return (
+        tuple(natverk.ursprung(str(config.get(f) or "")) for f in _ADRESSFÄLT),
+        _som_bool(config.get("verify_ssl")),
+    )
+
+
 @router.put("/{connection_id}", response_model=ConnectionRead, dependencies=[Depends(require_admin_key)])
 async def update_connection(
     connection_id: uuid.UUID, body: ConnectionUpdate, db: AsyncSession = Depends(get_db)
@@ -72,13 +94,19 @@ async def update_connection(
         conn.name = body.name
     if body.description is not None:
         conn.description = body.description
+    nya_uppgifter = bool(body.credentials) and any(v for v in body.credentials.values() if v)
+    cleared = False
     if body.config is not None:
+        # Ny värd (eller schema/port) eller ändrad certifikatprövning: sparade
+        # uppgifter skulle annars skickas till ett mål som inte är det de
+        # angavs för. De töms och måste anges igen, om inte nya kommer nu.
+        if conn.credentials_encrypted and not nya_uppgifter and _mål(body.config) != _mål(conn.config):
+            conn.credentials_encrypted = None
+            cleared = True
         conn.config = body.config
-    if body.credentials is not None and len(body.credentials) > 0:
+    if nya_uppgifter:
         # Only update credentials if non-empty values were actually provided
-        has_values = any(v for v in body.credentials.values() if v)
-        if has_values:
-            conn.credentials_encrypted = encrypt_credentials(body.credentials)
+        conn.credentials_encrypted = encrypt_credentials(body.credentials)
     if body.auth_type is not None:
         conn.auth_type = body.auth_type
     if body.status is not None:
@@ -86,7 +114,7 @@ async def update_connection(
 
     await db.commit()
     await db.refresh(conn)
-    return conn
+    return ConnectionRead.model_validate(conn).model_copy(update={"credentials_cleared": cleared})
 
 
 @router.delete("/{connection_id}", status_code=204, dependencies=[Depends(require_admin_key)])
@@ -112,6 +140,12 @@ async def test_connection(connection_id: uuid.UUID, db: AsyncSession = Depends(g
 
     from datetime import datetime, timezone
     try:
+        # Spärren mot interna adresser, med ett begripligt fel i stället för
+        # bara "misslyckades" (kopplingarna kontrollerar själva också).
+        mock = conn.connector_type == "2c8" and conn.config.get("mode", "mock") == "mock"
+        for fält in _ADRESSFÄLT:
+            if conn.config.get(fält) and not mock:
+                await natverk.kontrollera_url(str(conn.config[fält]))
         connector_cls = get_connector_class(conn.connector_type)
         connector = connector_cls(connection_config=conn.config, credentials=credentials)
         ok = await connector.test_connection()

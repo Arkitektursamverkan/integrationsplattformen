@@ -10,6 +10,10 @@ on:
   # The release workflow runs the same checks before it publishes images.
   workflow_call:
 
+# Jobben läser bara koden.
+permissions:
+  contents: read
+
 # A newer push to the same pull request makes the running checks moot.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
@@ -26,10 +30,10 @@ jobs:
         working-directory: backend
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Python 3.14
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.14"
           cache: pip
@@ -59,15 +63,15 @@ jobs:
         working-directory: frontend
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Node 26 (LTS)
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: "26"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build (includes tsc)
         run: npm run build
@@ -82,7 +86,7 @@ jobs:
     if: github.event_name != 'pull_request' || contains(github.head_ref, '/docker/')
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       # A fresh installation as another organisation would make it: production
       # mode, generated secrets, no overlay.

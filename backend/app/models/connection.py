@@ -25,3 +25,7 @@ class ConnectionORM(Base, TimestampMixin):
 
     # Relationships
     flows = relationship("FlowORM", back_populates="connection", cascade="all, delete-orphan")
+
+    @property
+    def has_credentials(self) -> bool:
+        return self.credentials_encrypted is not None

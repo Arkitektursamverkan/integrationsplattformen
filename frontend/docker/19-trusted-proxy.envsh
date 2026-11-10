@@ -1,0 +1,31 @@
+#!/bin/sh
+# Writes REAL_IP_CONFIG for the site config. Sourced by the nginx image's
+# entrypoint (/docker-entrypoint.d), before the templates are filled in.
+#
+# Bakom en proxy (lastbalanserare, Render) kommer varje anrop från proxyns
+# adress. TRUSTED_PROXY = proxyns adress eller intervall (flera med mellanslag
+# eller komma): då tar nginx klientens adress ur X-Forwarded-For – men bara
+# från de adresserna – och skickar den vidare till API:t, så att
+# anropsgränserna räknar varje klient i stället för proxyn. Tomt = anroparens
+# egen adress, och ett X-Forwarded-For som anroparen själv skickat ignoreras.
+
+REAL_IP_CONFIG=""
+for ea_proxy in $(printf '%s' "${TRUSTED_PROXY:-}" | tr ',' ' '); do
+    case "$ea_proxy" in
+        *[!0-9A-Fa-f.:/]*)
+            echo "19-trusted-proxy.envsh: warning: TRUSTED_PROXY: '$ea_proxy' is not an address or range – ignored"
+            continue
+            ;;
+    esac
+    REAL_IP_CONFIG="$REAL_IP_CONFIG    set_real_ip_from $ea_proxy;
+"
+done
+if [ -n "$REAL_IP_CONFIG" ]; then
+    REAL_IP_CONFIG="$REAL_IP_CONFIG    real_ip_header X-Forwarded-For;
+    real_ip_recursive on;
+"
+    echo "19-trusted-proxy.envsh: info: client addresses from X-Forwarded-For sent by $TRUSTED_PROXY"
+fi
+# Exporteras även tomt: annars lämnar mallen ${REAL_IP_CONFIG} orörd.
+export REAL_IP_CONFIG
+unset ea_proxy

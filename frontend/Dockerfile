@@ -4,7 +4,7 @@ FROM node:26-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 COPY . .
 RUN npm run build
@@ -29,6 +29,8 @@ COPY templates/default.conf.template /etc/nginx/templates/default.conf.template
 COPY docker/security-headers.conf /etc/nginx/security-headers.conf
 # Completes a short internal API name with its search domain (Render).
 COPY docker/18-api-upstream.envsh /docker-entrypoint.d/18-api-upstream.envsh
+# TRUSTED_PROXY → set_real_ip_from (client addresses behind a proxy).
+COPY docker/19-trusted-proxy.envsh /docker-entrypoint.d/19-trusted-proxy.envsh
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

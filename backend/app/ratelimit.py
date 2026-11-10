@@ -2,9 +2,14 @@
 
 Behind nginx or a platform proxy (Render) every request comes from the proxy's
 address, so all clients would share one limit. With TRUST_PROXY_HEADERS the
-first X-Forwarded-For entry is the client instead – only turn it on when the
-API cannot be reached except through such a proxy, since the header is
-otherwise whatever the caller chooses to send.
+client is read from X-Forwarded-For instead – only turn it on when the API
+cannot be reached except through such a proxy, since the header is otherwise
+whatever the caller chooses to send.
+
+Varje proxy lägger till den adress den såg sist i huvudet, så bara de
+TRUSTED_PROXY_COUNT sista leden (räknat från höger) är skrivna av proxyer vi
+litar på. Klienten är ledet nummer TRUSTED_PROXY_COUNT från höger – det första
+ledet kan anroparen ha skrivit själv och får aldrig avgöra gränsen.
 """
 from __future__ import annotations
 
@@ -17,10 +22,17 @@ from app.config import settings
 
 def client_address(request: Request) -> str:
     if settings.TRUST_PROXY_HEADERS:
-        forwarded = request.headers.get("x-forwarded-for", "")
-        first = forwarded.split(",")[0].strip()
-        if first:
-            return first
+        # Flera X-Forwarded-For-huvuden räknas som ett, i ordning.
+        led = [
+            del_.strip()
+            for värde in request.headers.getlist("x-forwarded-for")
+            for del_ in värde.split(",")
+            if del_.strip()
+        ]
+        if led:
+            antal = max(1, settings.TRUSTED_PROXY_COUNT)
+            # Färre led än proxyer: alla är proxyernas, ta det yttersta.
+            return led[-antal] if len(led) >= antal else led[0]
     return get_remote_address(request)
 
 

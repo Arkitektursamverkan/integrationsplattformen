@@ -7,6 +7,9 @@ server {
 
     include /etc/nginx/security-headers.conf;
 
+    # Behind a proxy: client addresses from TRUSTED_PROXY's X-Forwarded-For
+    # (docker/19-trusted-proxy.envsh). Empty without TRUSTED_PROXY.
+${REAL_IP_CONFIG}
     # Gzip
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
@@ -31,7 +34,10 @@ server {
         proxy_pass $api_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # Exactly one entry, the client as nginx sees it (after real_ip above).
+        # Appending to the caller's header would let it choose the address the
+        # API's rate limits count (TRUST_PROXY_HEADERS, TRUSTED_PROXY_COUNT=1).
+        proxy_set_header X-Forwarded-For $remote_addr;
         proxy_read_timeout 60s;
     }
 

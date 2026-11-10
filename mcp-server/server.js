@@ -402,7 +402,7 @@ server.tool(
   "Create a new consumer API key. Returns the key value ONCE — it cannot be retrieved again.",
   {
     name: z.string().describe("Name for the API key, e.g. 'EA Application'"),
-    scopes: z.array(z.string()).optional().default(["data:read"]).describe("Permission scopes"),
+    scopes: z.array(z.string()).optional().default(["data:read"]).describe("Permission scopes: data:read (required to read data), plus optionally flow:<flow uuid> – one or more – to limit the key to those flows"),
   },
   async (args) => result(await api("POST", "/api-keys", args))
 );
