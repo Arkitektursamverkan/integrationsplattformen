@@ -9,6 +9,10 @@ funktioner, en ny korrigering för rättelser.
 
 - (inget än)
 
+## 0.10.0 – 2026-11-10
+
+- **Plattformen anmäler sin adress till portalen.** Med `PORTAL_URL` skickar plattformen vid varje hämtning också `PUT /installation/plattform` med sin interna adress (`http://<egen IP mot portalen>:8000/api/v1`), så att portalen hittar den utan `INTEGRATION_PLATFORM_URL`. På Render behöver portal-api därmed ingen referens till plattform-api: referenser åt båda hållen fick varje Blueprint-synk att sluta med fel. Hämtningen startar nu även när alla Entra-fält finns i miljön. En äldre portal (före 0.16.0) svarar med fel på anmälan, och det loggas utan att stoppa något.
+
 ## 0.9.0 – 2026-11-10
 
 - **Render-automatik: Entra ur portalen.** Med nya `PORTAL_URL` (full adress `http://värd:port/api/v1` eller bara `värd:port`, som Renders `hostport`) hämtar plattformen portalens `GET /installation` i bakgrunden vid starten – var 10:e sekund tills det lyckas, sedan var 5:e minut – och fyller `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, `ENTRA_API_SCOPE` och `BOOTSTRAP_ADMIN_EMAILS` när de är tomma i plattformens egen miljö. Egna värden vinner alltid. Hemligheten (`X-Installation-Secret`) är nya `PORTAL_INSTALLATION_SECRET`, tomt = `POST_EXEC_WEBHOOK_SECRET`. Omdirigeringar följs inte. Kräver en portal med `/installation`. Utan `PORTAL_URL` är allt som förut. Microsofts nycklar cachas nu per tenant.

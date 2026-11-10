@@ -5,6 +5,12 @@ GET /installation i bakgrunden – var 10:e sekund tills det lyckas, sedan var
 5:e minut – och fyller ENTRA_TENANT_ID, ENTRA_CLIENT_ID, ENTRA_API_SCOPE och
 BOOTSTRAP_ADMIN_EMAILS i det delade settings-objektet.
 
+Vid varje hämtning anmäler plattformen också sin interna adress till portalen
+(PUT /installation/plattform): http://<egen IP på portalens nät>:8000/api/v1.
+Då behöver portalens tjänst ingen referens till plattformens – på Render
+slutade varje Blueprint-synk med fel när de pekade på varandra. En portal
+med INTEGRATION_PLATFORM_URL satt använder sin egen inställning.
+
 Egna miljövariabler vinner alltid: de fält som hade ett värde när uppgiften
 startade rörs aldrig. Övriga fält följer portalen – en senare hämtning kan
 ändra dem, och entra=null tömmer dem. Allt som använder fälten
@@ -13,6 +19,8 @@ startade rörs aldrig. Övriga fält följer portalen – en senare hämtning ka
 from __future__ import annotations
 
 import asyncio
+import ipaddress
+import socket
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -30,6 +38,9 @@ FÄLT: dict[str, str] = {
     "ENTRA_API_SCOPE": "api_scope",
     "BOOTSTRAP_ADMIN_EMAILS": "bootstrap_admin_emails",
 }
+
+# Porten api:t lyssnar på i avbilden (Dockerfile: uvicorn --port 8000).
+API_PORT = 8000
 
 INTERVALL_FEL = 10.0
 INTERVALL_OK = 300.0
@@ -89,6 +100,38 @@ async def hämta(adress: str, transport: httpx.AsyncBaseTransport | None = None)
     return svar
 
 
+def egen_ip(värd: str, port: int) -> str:
+    """Den egna adressen på nätet mot portalen: den lokala adress som en
+    förbindelse till portalen går ut från (UDP – inget skickas)."""
+    for familj, typ, proto, _namn, mål in socket.getaddrinfo(värd, port, type=socket.SOCK_DGRAM):
+        with socket.socket(familj, typ, proto) as s:
+            s.connect(mål)
+            return str(s.getsockname()[0])
+    raise OSError(f"{värd} gick inte att slå upp")
+
+
+def egen_adress(portal_adress: str) -> str:
+    """Plattformens API-adress som portalen når den på."""
+    delar = urlsplit(portal_adress)
+    ip = ipaddress.ip_address(egen_ip(delar.hostname or "", delar.port or 80))
+    värd = f"[{ip}]" if ip.version == 6 else str(ip)
+    return f"http://{värd}:{API_PORT}/api/v1"
+
+
+async def anmäl(adress: str, transport: httpx.AsyncBaseTransport | None = None) -> str:
+    """Anmäl plattformens adress till portalen. Fel ger undantag."""
+    egen = await asyncio.to_thread(egen_adress, adress)
+    async with httpx.AsyncClient(timeout=_TIMEOUT, follow_redirects=False, transport=transport) as c:
+        r = await c.put(
+            f"{adress}/installation/plattform",
+            json={"url": egen},
+            headers={"X-Installation-Secret": hemlighet(), "Accept": "application/json"},
+        )
+    if r.status_code != 200:
+        raise RuntimeError(f"portalen svarade {r.status_code}")
+    return egen
+
+
 def _värde(rå: Any) -> str:
     if rå is None:
         return ""
@@ -122,6 +165,7 @@ async def kör(adress: str, transport: httpx.AsyncBaseTransport | None = None,
               fel: float = INTERVALL_FEL, ok: float = INTERVALL_OK) -> None:
     """Hämta tills uppgiften avbryts. Ett fel stoppar aldrig plattformen."""
     lyckats = False
+    anmäld: str | None = None
     while True:
         try:
             svar = await hämta(adress, transport)
@@ -132,6 +176,16 @@ async def kör(adress: str, transport: httpx.AsyncBaseTransport | None = None,
                          andrade=ändrade, egna=sorted(ur_miljön()))
             lyckats = True
             vänta = ok
+            try:
+                egen = await anmäl(adress, transport)
+                if egen != anmäld:
+                    log.info("portal.plattformen_anmald", url=egen)
+                anmäld = egen
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:  # noqa: BLE001 – äldre portal (före 0.16.0) eller tillfälligt fel
+                log.warning("portal.anmalan_misslyckades", error=f"{type(e).__name__}: {e}")
+                anmäld = None
         except asyncio.CancelledError:
             raise
         except Exception as e:  # noqa: BLE001 – en portal som inte svarar får inte stoppa plattformen
@@ -153,8 +207,6 @@ def starta() -> asyncio.Task[None] | None:
         log.warning("portal.hemlighet_saknas",
                     note="PORTAL_INSTALLATION_SECRET och POST_EXEC_WEBHOOK_SECRET är tomma – inget hämtas")
         return None
-    egna = ur_miljön()
-    if egna == set(FÄLT):
-        log.info("portal.installation_behovs_inte", note="alla Entra-fält är satta i miljön")
-        return None
+    # Även när miljön har alla Entra-fält: plattformen anmäler sin adress.
+    ur_miljön()
     return asyncio.create_task(kör(adress), name="portal-installation")

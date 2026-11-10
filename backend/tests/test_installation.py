@@ -8,6 +8,7 @@ from app.config import settings
 from app.services import entra, installation
 
 FÄLT = list(installation.FÄLT)
+ÄKTA_EGEN_IP = installation.egen_ip  # före fixturens ersättning
 
 SVAR = {
     "portal_url": "https://portal.example.org",
@@ -30,6 +31,7 @@ def _ren_miljö(monkeypatch):
     monkeypatch.setattr(settings, "PORTAL_INSTALLATION_SECRET", "")
     monkeypatch.setattr(settings, "POST_EXEC_WEBHOOK_SECRET", "")
     monkeypatch.setattr(installation, "_ur_miljön", None)
+    monkeypatch.setattr(installation, "egen_ip", lambda värd, port: "10.0.3.7")
 
 
 def _transport(svar_för):
@@ -146,6 +148,8 @@ async def test_fel_och_timeout_ger_omförsök_utan_krasch(monkeypatch):
     försök = []
 
     def svar_för(request):
+        if request.method == "PUT":
+            return httpx.Response(200, json={})
         försök.append(1)
         if len(försök) == 1:
             raise httpx.ConnectTimeout("timeout", request=request)
@@ -181,12 +185,20 @@ def test_starta_kräver_adress_och_hemlighet():
     assert installation.starta() is None  # ogiltig adress
 
 
-def test_starta_behövs_inte_när_miljön_har_allt():
+async def test_startar_även_när_miljön_har_allt(monkeypatch):
+    """Plattformen anmäler sin adress även när Entra kommer ur miljön."""
     for f in FÄLT:
         setattr(settings, f, "x")
     settings.PORTAL_URL = "portal:8000"
     settings.POST_EXEC_WEBHOOK_SECRET = "hemlig"
-    assert installation.starta() is None
+
+    async def kör(adress):
+        return None
+
+    monkeypatch.setattr(installation, "kör", kör)
+    uppgift = installation.starta()
+    assert uppgift is not None
+    await uppgift
 
 
 async def test_starta_kör_i_bakgrunden(monkeypatch):
@@ -220,3 +232,51 @@ async def test_jwks_cache_följer_tenanten(monkeypatch):
     settings.ENTRA_TENANT_ID = "t2"
     assert (await entra._nycklar())["keys"][0]["kid"] == "t2"
     assert hämtade == ["t1", "t2"]
+
+
+# ── Plattformen anmäler sin adress ──────────────────────────────────────────
+# REGRESSION: på Render pekade portal-api på plattform-api och tvärtom, och
+# varje Blueprint-synk slutade med fel. Nu talar plattformen om var den finns.
+
+async def test_anmälan_skickar_egen_adress_med_hemligheten(monkeypatch):
+    transport, anrop = _transport(lambda r: httpx.Response(
+        200, json=SVAR if r.method == "GET" else {"platform_url": "x", "in_use": True}))
+    settings.POST_EXEC_WEBHOOK_SECRET = "hemlig"
+    egen = await installation.anmäl("http://portal-api-m9vz:8000/api/v1", transport)
+    assert egen == "http://10.0.3.7:8000/api/v1"
+    (put,) = anrop
+    assert put.method == "PUT"
+    assert str(put.url) == "http://portal-api-m9vz:8000/api/v1/installation/plattform"
+    assert put.headers["X-Installation-Secret"] == "hemlig"
+    assert put.read() == b'{"url":"http://10.0.3.7:8000/api/v1"}'
+
+
+async def test_ipv6_får_hakparenteser(monkeypatch):
+    monkeypatch.setattr(installation, "egen_ip", lambda värd, port: "fd00::7")
+    assert installation.egen_adress("http://portal:8000/api/v1") == "http://[fd00::7]:8000/api/v1"
+
+
+async def test_äldre_portal_stoppar_inte_hämtningen(monkeypatch):
+    """En portal före 0.16.0 svarar 404/405 på anmälan – Entra hämtas ändå."""
+    def svar_för(request):
+        return httpx.Response(405) if request.method == "PUT" else httpx.Response(200, json=SVAR)
+
+    transport, anrop = _transport(svar_för)
+    väntetider = []
+
+    async def sov(s):
+        väntetider.append(s)
+        raise asyncio.CancelledError
+
+    monkeypatch.setattr(installation.asyncio, "sleep", sov)
+    settings.POST_EXEC_WEBHOOK_SECRET = "hemlig"
+    with pytest.raises(asyncio.CancelledError):
+        await installation.kör("http://portal/api/v1", transport, fel=10, ok=300)
+    assert settings.ENTRA_TENANT_ID == "tenant-p"
+    assert väntetider == [300]
+    assert [r.method for r in anrop] == ["GET", "PUT"]
+
+
+def test_egen_ip_mot_lokal_adress():
+    """Riktig uppslagning (utan monkeypatch): mot localhost är man 127.0.0.1."""
+    assert ÄKTA_EGEN_IP("127.0.0.1", 9) == "127.0.0.1"
