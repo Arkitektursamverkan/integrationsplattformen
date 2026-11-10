@@ -145,6 +145,18 @@ class Settings(BaseSettings):
     # läggas till av en administratör (med samma e-post, utan lösenord).
     BOOTSTRAP_ADMIN_EMAILS: str = ""
 
+    # ── Portalen (Render-automatik) ──────────────────────────────────────────
+    # Arkitekturportalens API: full adress (http://host:port/api/v1) eller bara
+    # värd:port (Render fromService … hostport) = http://värd:port/api/v1.
+    # Satt = plattformen hämtar Entra-uppgifterna ur portalens
+    # GET /installation vid starten och fyller ENTRA_TENANT_ID, ENTRA_CLIENT_ID,
+    # ENTRA_API_SCOPE och BOOTSTRAP_ADMIN_EMAILS – bara de som är tomma här.
+    # Tomt = inget hämtas (som förut).
+    PORTAL_URL: str = ""
+    # Skickas som X-Installation-Secret – portalens SYNC_WEBHOOK_SECRET. Tomt =
+    # POST_EXEC_WEBHOOK_SECRET (som redan är samma värde).
+    PORTAL_INSTALLATION_SECRET: str = ""
+
     # One-time code for creating the first admin at /setup. In production the
     # first account cannot be created without it – otherwise whoever reached a
     # new installation first would become its admin.

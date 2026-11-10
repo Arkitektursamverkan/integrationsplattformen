@@ -75,6 +75,9 @@ services:
       ENTRA_REQUIRED_SCOPE: ${ENTRA_REQUIRED_SCOPE:-}
       BOOTSTRAP_ADMIN_EMAILS: ${BOOTSTRAP_ADMIN_EMAILS:-}
       SETUP_CODE: ${SETUP_CODE:-}
+      # Entra-fälten ur portalen när de är tomma här – se .env.example.
+      PORTAL_URL: ${PORTAL_URL:-}
+      PORTAL_INSTALLATION_SECRET: ${PORTAL_INSTALLATION_SECRET:-}
     depends_on:
       db:
         condition: service_healthy

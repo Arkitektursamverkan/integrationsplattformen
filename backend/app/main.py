@@ -1,7 +1,8 @@
 """FastAPI application factory with lifespan management."""
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
+import asyncio
+from contextlib import asynccontextmanager, suppress
 from typing import AsyncIterator
 
 import structlog
@@ -63,11 +64,20 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         except Exception as e:  # en källa som saknas får inte stoppa plattformen
             log.error("arkitekten.kalla_misslyckades", error=str(e))
 
+    # Entra-uppgifterna ur portalen (PORTAL_URL), i bakgrunden: en portal som
+    # inte svarar än får inte fördröja starten.
+    from app.services import installation
+    portal_uppgift = installation.starta()
+
     from app.tasks.scheduler import start_scheduler, shutdown_scheduler
     await start_scheduler()
 
     yield
 
+    if portal_uppgift is not None:
+        portal_uppgift.cancel()
+        with suppress(asyncio.CancelledError):
+            await portal_uppgift
     await shutdown_scheduler()
     log.info("app.stopped")
 
