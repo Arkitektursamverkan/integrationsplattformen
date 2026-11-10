@@ -118,8 +118,11 @@ async def receive_webhook(
         payload = {"raw": (await request.body()).decode(errors="replace")}
 
     # Execute the associated flow
-    from app.services.flow_service import execute_flow
-    execution = await execute_flow(db, endpoint.flow_id, trigger_type="webhook")
+    from app.services.flow_service import FlowDisabled, execute_flow
+    try:
+        execution = await execute_flow(db, endpoint.flow_id, trigger_type="webhook")
+    except FlowDisabled:
+        raise HTTPException(status_code=409, detail="Flow is disabled")
 
     return {
         "status": execution.status,

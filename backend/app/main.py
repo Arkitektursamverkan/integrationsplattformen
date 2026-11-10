@@ -43,9 +43,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if weak and settings.APP_ENV not in ("development", "test"):
         raise RuntimeError(
             f"Refusing to start with APP_ENV={settings.APP_ENV}: {', '.join(weak)} "
-            "is empty, a placeholder or shorter than 32 characters. "
+            "is empty, a placeholder or shorter than 32 characters "
+            "(DATABASE_URL: the database password is a known default such as integration_pass). "
             "Generate one with: openssl rand -hex 32 "
-            "(changing ENCRYPTION_KEY makes stored connection credentials unreadable)"
+            "(changing ENCRYPTION_KEY makes stored connection credentials unreadable; a new "
+            "database password also needs ALTER USER in the database)"
         )
     if weak:
         log.warning("app.weak_secrets", settings=weak, note="only acceptable in development and test")
@@ -94,6 +96,10 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Ytterst: en för stor kropp avvisas innan någon annan läser den.
+    from app.kroppsgrans import Kroppsgräns
+    app.add_middleware(Kroppsgräns)
 
     from app.api.router import api_router
     app.include_router(api_router)

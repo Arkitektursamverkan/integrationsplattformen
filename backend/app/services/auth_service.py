@@ -32,12 +32,13 @@ def verify_password(password: str, password_hash: str) -> bool:
         return False
 
 
-def create_access_token(user_id: str, username: str, role: str) -> str:
+def create_access_token(user_id: str, username: str, role: str, token_version: int = 0) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
     payload = {
         "sub": user_id,
         "username": username,
         "role": role,
+        "tv": token_version,
         "exp": expire,
         "iat": datetime.now(timezone.utc),
         "type": "access",
@@ -45,10 +46,11 @@ def create_access_token(user_id: str, username: str, role: str) -> str:
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
-def create_refresh_token(user_id: str) -> str:
+def create_refresh_token(user_id: str, token_version: int = 0) -> str:
     expire = datetime.now(timezone.utc) + timedelta(days=7)
     payload = {
         "sub": user_id,
+        "tv": token_version,
         "exp": expire,
         "iat": datetime.now(timezone.utc),
         "type": "refresh",
@@ -58,3 +60,14 @@ def create_refresh_token(user_id: str) -> str:
 
 def decode_token(token: str) -> dict:
     return jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+
+
+def token_version_stämmer(payload: dict, aktuell: int | None) -> bool:
+    """Tokenens version (tv) är användarens nuvarande. En token utan fältet –
+    utfärdad före tokenversionerna – läses som 0 och gäller tills den går ut,
+    så länge användarens version inte har höjts."""
+    try:
+        tv = int(payload.get("tv", 0) or 0)
+    except (TypeError, ValueError):
+        return False
+    return tv == (aktuell or 0)

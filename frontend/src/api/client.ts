@@ -29,6 +29,7 @@ client.interceptors.response.use(
       if (path !== "/login" && path !== "/setup") {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
+        sessionStorage.removeItem("refresh_token");
         window.location.href = "/login";
       }
     }

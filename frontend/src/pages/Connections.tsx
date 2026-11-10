@@ -89,6 +89,18 @@ export default function Connections() {
   const handleUpdate = async () => {
     if (!editConn) return;
     const config: Record<string, unknown> = { ...editConfigFields };
+    // Fält som var objekt (t.ex. headers) visas som JSON – tillbaka till objekt,
+    // så att de inte sparas som text. Dolda värden (••••••) skickas oförändrade:
+    // plattformen behåller då det sparade värdet.
+    for (const [k, v] of Object.entries(editConn.config || {})) {
+      if (v && typeof v === "object" && typeof config[k] === "string") {
+        try {
+          config[k] = JSON.parse(config[k] as string);
+        } catch {
+          /* ogiltig JSON: sparas som den skrevs */
+        }
+      }
+    }
     if (editConn.connector_type === "2c8" && editConfigFields.mode === "api") {
       config.verify_ssl = editConfigFields.verify_ssl !== "false";
     }

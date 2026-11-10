@@ -1,3 +1,13 @@
+# HSTS bara när begäran kom över https – direkt (en installation som själv
+# terminerar TLS) eller via proxyn framför (X-Forwarded-Proto). Över http
+# skickas inget: där bryr sig webbläsaren inte om huvudet, och en installation
+# utan TLS ska inte låsas till https. Används i security-headers.conf.
+map "$scheme:$http_x_forwarded_proto" $ip_hsts {
+    default "";
+    "~^https:" "max-age=31536000";
+    "~:https(,|$)" "max-age=31536000";
+}
+
 server {
     # PORT (default 80) is set by a platform such as Render.
     listen ${PORT};
@@ -30,6 +40,9 @@ ${REAL_IP_CONFIG}
     resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;
 
     location /api {
+        # Största kropp: en CSV-fil på 20 MB plus formulärets övriga delar –
+        # samma gräns som API:t självt (backend/app/kroppsgrans.py).
+        client_max_body_size 21m;
         set $api_upstream http://${API_UPSTREAM};
         proxy_pass $api_upstream;
         proxy_set_header Host $host;

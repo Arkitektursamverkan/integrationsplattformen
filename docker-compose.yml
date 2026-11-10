@@ -13,7 +13,8 @@ services:
       POSTGRES_USER: integration_user
       # Only read when the volume is first created; changing it afterwards
       # needs ALTER USER in the database as well.
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-integration_pass}
+      # Krävs – inget standardlösenord (skapa med: openssl rand -hex 16).
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Sätt POSTGRES_PASSWORD i .env – openssl rand -hex 16}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -40,11 +41,12 @@ services:
     build:
       context: ./backend
       target: runtime
-    # Published so that Arkitekturportalen can reach the API.
-    ports:
-      - "${API_PORT:-8100}:8000"
+    # Inte publicerad: webben (nginx) når API:t över compose-nätet, och
+    # Arkitekturportalen över det delade nätet (deploy/shared-network.yml).
+    # Behövs porten på värden (utveckling, /api/docs direkt): lägg till
+    # deploy/api-port.yml i COMPOSE_FILE – se .env.example.
     environment:
-      DATABASE_URL: postgresql+asyncpg://integration_user:${POSTGRES_PASSWORD:-integration_pass}@db:5432/integration_db
+      DATABASE_URL: postgresql+asyncpg://integration_user:${POSTGRES_PASSWORD:?Sätt POSTGRES_PASSWORD i .env}@db:5432/integration_db
       REDIS_URL: redis://redis:6379/0
       # Anything but development/test refuses to start with placeholder
       # secrets – see .env.example for how to generate them.
@@ -70,6 +72,7 @@ services:
       ENTRA_TENANT_ID: ${ENTRA_TENANT_ID:-}
       ENTRA_CLIENT_ID: ${ENTRA_CLIENT_ID:-}
       ENTRA_API_SCOPE: ${ENTRA_API_SCOPE:-}
+      ENTRA_REQUIRED_SCOPE: ${ENTRA_REQUIRED_SCOPE:-}
       BOOTSTRAP_ADMIN_EMAILS: ${BOOTSTRAP_ADMIN_EMAILS:-}
       SETUP_CODE: ${SETUP_CODE:-}
     depends_on:
@@ -88,6 +91,10 @@ services:
       target: runtime
     ports:
       - "${WEB_PORT:-3100}:80"
+    # Webben kör nginx som en vanlig användare (nginx-unprivileged) men lyssnar
+    # ändå på 80: Docker tillåter det som standard, och raden gör det tydligt.
+    sysctls:
+      net.ipv4.ip_unprivileged_port_start: "0"
     environment:
       # Proxyn framför webben, om någon – se .env.example.
       TRUSTED_PROXY: ${TRUSTED_PROXY:-}

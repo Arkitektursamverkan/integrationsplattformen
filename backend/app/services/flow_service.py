@@ -8,6 +8,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 
+import anyio
 import httpx
 import structlog
 from sqlalchemy import select
@@ -24,7 +25,7 @@ from app.models.execution_log import ExecutionLogORM
 from app.models.flow import FlowORM
 from app.models.flow_step import FlowStepORM
 from app.services.crypto_service import decrypt_credentials
-from app.services.transform_engine import apply_operation
+from app.services.transform_engine import apply_operations
 
 log = structlog.get_logger(__name__)
 
@@ -51,8 +52,27 @@ def _checksum(data: dict) -> str:
     return hashlib.sha256(json.dumps(data, sort_keys=True, default=str).encode()).hexdigest()
 
 
+class FlowDisabled(Exception):
+    """Flödet är inaktiverat och körs inte av webhook eller schema."""
+
+
+# Ett inaktiverat flöde körs bara när en administratör startar det för hand
+# (trigger_type="manual") – t.ex. för att prova det innan det slås på.
+_KÖRS_ÄVEN_INAKTIVERAT = {"manual"}
+
+
 async def execute_flow(db: AsyncSession, flow_id: uuid.UUID, trigger_type: str = "manual") -> ExecutionLogORM:
-    """Execute a flow: fetch data, apply transforms, upsert records."""
+    """Execute a flow: fetch data, apply transforms, upsert records.
+
+    Ett inaktiverat flöde (enabled=False) ger FlowDisabled för webhook och
+    schema; en manuell körning (bara administratörer) går, och loggas."""
+    flow = (await db.execute(select(FlowORM).where(FlowORM.id == flow_id))).scalar_one_or_none()
+    if flow is not None and not flow.enabled:
+        if trigger_type not in _KÖRS_ÄVEN_INAKTIVERAT:
+            log.info("flow.disabled_skipped", flow_id=str(flow_id), trigger=trigger_type)
+            raise FlowDisabled(f"Flow {flow_id} is disabled")
+        log.warning("flow.disabled_manual_run", flow_id=str(flow_id), trigger=trigger_type)
+
     now = datetime.now(timezone.utc)
 
     # Create execution log
@@ -127,8 +147,10 @@ async def execute_flow(db: AsyncSession, flow_id: uuid.UUID, trigger_type: str =
         )
         steps = steps_result.scalars().all()
 
-        for step in steps:
-            records = apply_operation(records, step.step_type, step.config)
+        # I en tråd: ett steg med en användares regex eller mall får inte
+        # hänga händelseloopen (och därmed alla andra anrop).
+        stegen = [(step.step_type, step.config) for step in steps]
+        records = await anyio.to_thread.run_sync(apply_operations, records, stegen)
 
         source_type = connection.connector_type
 

@@ -21,9 +21,60 @@ Supported step types:
 from __future__ import annotations
 
 import re
+import string
 from datetime import datetime
+from functools import lru_cache
 from html import unescape
 from typing import Any
+
+
+# ── Gränser för användarens regex och mallar ──────────────────────────────────
+#
+# Stegen körs i en egen tråd (flow_service), så att en långsam regex inte
+# hänger händelseloopen. Gränserna här stoppar det som annars kunde ta minnet
+# eller tiden: mycket långa mönster och formatfält med enorm bredd ({x:>999999999}).
+# Python-modulen re har ingen tidsgräns; paketet regex används inte.
+
+MAX_REGEX_LÄNGD = 500
+MAX_MALL_LÄNGD = 5000
+MAX_FORMAT_BREDD = 1000
+
+
+class TransformError(Exception):
+    """Ett steg med en inställning som inte godtas. Meddelandet visas i körningen."""
+
+
+@lru_cache(maxsize=256)
+def _regex(mönster: str) -> re.Pattern:
+    mönster = str(mönster)
+    if len(mönster) > MAX_REGEX_LÄNGD:
+        raise TransformError(f"Regex too long (max {MAX_REGEX_LÄNGD} characters)")
+    return re.compile(mönster)
+
+
+_TAL = re.compile(r"\d+")
+
+
+@lru_cache(maxsize=256)
+def _kontrollera_mall(mall: str) -> None:
+    """Mallen för add_column/template: inga attribut, inga nästlade fält och
+    ingen bredd eller precision över MAX_FORMAT_BREDD."""
+    if len(mall) > MAX_MALL_LÄNGD:
+        raise TransformError(f"Template too long (max {MAX_MALL_LÄNGD} characters)")
+    try:
+        delar = list(string.Formatter().parse(mall))
+    except ValueError as e:
+        raise TransformError(f"Invalid template: {e}") from e
+    for _text, fält, spec, _konv in delar:
+        if fält is None:
+            continue
+        if "." in fält:
+            raise TransformError("Template fields may not use attribute access")
+        if spec:
+            if "{" in spec:
+                raise TransformError("Template format specs may not contain fields")
+            if any(int(t) > MAX_FORMAT_BREDD for t in _TAL.findall(spec)):
+                raise TransformError(f"Template format width/precision over {MAX_FORMAT_BREDD}")
 
 
 # ── Value transforms (used by field mappings) ─────────────────────────────────
@@ -87,7 +138,7 @@ def _eval_filter(value: Any, operator: str, target: Any) -> bool:
         elif operator == "in":
             return value in target if isinstance(target, list) else False
         elif operator == "regex":
-            return bool(re.search(str(target), str(value))) if value else False
+            return bool(_regex(str(target)).search(str(value))) if value else False
         elif operator == "exists":
             return value is not None and value != ""
         elif operator == "not_exists":
@@ -170,6 +221,7 @@ def op_add_column(records: list[dict], config: dict) -> list[dict]:
 
         elif mode == "template":
             template = config.get("template", "")
+            _kontrollera_mall(str(template))
             try:
                 record[column] = template.format(**{k: _safe_str(v) for k, v in record.items()})
             except (KeyError, IndexError):
@@ -273,7 +325,7 @@ def op_replace(records: list[dict], config: dict) -> list[dict]:
         if field in record and record[field] is not None:
             val = _safe_str(record[field])
             if use_regex:
-                record[field] = re.sub(find, replace_with, val)
+                record[field] = _regex(find).sub(replace_with, val)
             else:
                 record[field] = val.replace(find, replace_with)
     return records
@@ -298,7 +350,7 @@ def op_substring(records: list[dict], config: dict) -> list[dict]:
     for record in records:
         val = _safe_str(record.get(field, ""))
         if regex_pattern:
-            m = re.search(regex_pattern, val)
+            m = _regex(regex_pattern).search(val)
             record[target] = m.group(1) if m and m.groups() else (m.group(0) if m else "")
         else:
             start = config.get("start", 0)
@@ -493,4 +545,12 @@ def apply_operation(records: list[dict], step_type: str, config: dict) -> list[d
     op_fn = OPERATIONS.get(step_type)
     if op_fn:
         return op_fn(records, config)
+    return records
+
+
+def apply_operations(records: list[dict], steps: list[tuple[str, dict]]) -> list[dict]:
+    """Alla steg i ordning. Synkron – anropas i en tråd (anyio.to_thread), så
+    att ett långsamt steg inte hänger händelseloopen."""
+    for step_type, config in steps:
+        records = apply_operation(records, step_type, config)
     return records

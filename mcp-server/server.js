@@ -4,6 +4,12 @@
  *
  * Exposes the Integration Platform's full API as MCP tools for AI agents.
  * Communicates with the running API at http://localhost:8100 via HTTP.
+ *
+ * MCP_READ_ONLY=1: bara läsverktygen – inga verktyg som skapar, ändrar,
+ * tar bort eller kör något, och inga API-nyckelverktyg. Data som verktygen
+ * läser (poster, felmeddelanden, beskrivningar) kommer från externa system
+ * och kan innehålla instruktioner riktade till AI-agenten (promptinjektion) –
+ * se README.md.
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -19,9 +25,17 @@ if (!ADMIN_KEY) {
   process.exit(1);
 }
 
+const READ_ONLY = ["1", "true", "yes", "on"].includes(
+  (process.env.MCP_READ_ONLY || "").trim().toLowerCase()
+);
+
 // ── HTTP helpers ─────────────────────────────────────────────────────────────
 
 async function api(method, path, body = null) {
+  // Skyddsnät i läsläget: bara GET når API:t, även om ett verktyg skulle missas nedan.
+  if (READ_ONLY && method !== "GET") {
+    throw new Error(`MCP_READ_ONLY: ${method} ${path} is not allowed`);
+  }
   const url = `${API_BASE}${path}`;
   const opts = {
     method,
@@ -149,6 +163,29 @@ const server = new McpServer({
   name: "integration-platform",
   version: "1.0.0",
 });
+
+// Verktyg som skriver, kör eller hanterar nycklar. Med MCP_READ_ONLY=1
+// registreras de inte alls, så att agenten inte ens ser dem.
+const SKRIVANDE_VERKTYG = new Set([
+  "create_connection",
+  "test_connection",
+  "delete_connection",
+  "create_flow",
+  "update_flow",
+  "delete_flow",
+  "execute_flow",
+  "list_api_keys",
+  "create_api_key",
+  "delete_api_key",
+  "create_schedule",
+  "delete_schedule",
+  "deploy_template",
+]);
+if (READ_ONLY) {
+  const registrera = server.tool.bind(server);
+  server.tool = (name, ...rest) => (SKRIVANDE_VERKTYG.has(name) ? undefined : registrera(name, ...rest));
+  console.error("MCP_READ_ONLY: only read tools are available.");
+}
 
 // ── Discovery tools ──────────────────────────────────────────────────────────
 

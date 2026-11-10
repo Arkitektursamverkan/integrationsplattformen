@@ -23,9 +23,14 @@ export interface User {
   is_active: boolean;
 }
 
+// Uppdateringstoken gäller i sju dagar: den ligger i sessionStorage (som i
+// portalen), så att den försvinner när fliken stängs och inte delas mellan
+// flikar. Åtkomsttoken (en timme) ligger kvar i localStorage.
 export function setTokens(tokens: TokenResponse) {
   localStorage.setItem("access_token", tokens.access_token);
-  localStorage.setItem("refresh_token", tokens.refresh_token);
+  sessionStorage.setItem("refresh_token", tokens.refresh_token);
+  // Från versioner som sparade den i localStorage.
+  localStorage.removeItem("refresh_token");
   localStorage.setItem("user_role", tokens.role);
   localStorage.setItem("username", tokens.username);
 }
@@ -33,8 +38,16 @@ export function setTokens(tokens: TokenResponse) {
 export function clearTokens() {
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
+  sessionStorage.removeItem("refresh_token");
   localStorage.removeItem("user_role");
   localStorage.removeItem("username");
+}
+
+// En uppdateringstoken som en tidigare version lämnat i localStorage tas bort.
+try {
+  localStorage.removeItem("refresh_token");
+} catch {
+  /* lagringen kan vara avstängd */
 }
 
 export function getAccessToken(): string | null {

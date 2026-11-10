@@ -6,6 +6,7 @@ import json
 import uuid
 from datetime import datetime, timezone
 
+import anyio
 import structlog
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
@@ -18,7 +19,7 @@ from app.models.connection import ConnectionORM
 from app.models.data_record import DataRecordORM
 from app.models.execution_log import ExecutionLogORM
 from app.models.flow import FlowORM
-from app.services.transform_engine import apply_operation
+from app.services.transform_engine import apply_operations
 from app.models.flow_step import FlowStepORM
 
 log = structlog.get_logger(__name__)
@@ -240,8 +241,10 @@ async def replace_csv_data(
     steps = steps_result.scalars().all()
     import copy
     transformed = copy.deepcopy(records)
-    for step in steps:
-        transformed = apply_operation(transformed, step.step_type, step.config)
+    # I en tråd – se flow_service.execute_flow.
+    transformed = await anyio.to_thread.run_sync(
+        apply_operations, transformed, [(step.step_type, step.config) for step in steps]
+    )
 
     created = 0
     for record in records:

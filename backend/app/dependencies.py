@@ -17,7 +17,7 @@ from app.config import settings
 from app.database import get_db
 from app.models.api_key import ApiKeyORM
 from app.models.user import UserORM
-from app.services.auth_service import decode_token, verify_password
+from app.services.auth_service import decode_token, token_version_stämmer, verify_password
 
 # Optional bearer token — doesn't auto-reject if missing
 _bearer_scheme = HTTPBearer(auto_error=False)
@@ -29,6 +29,20 @@ def _is_admin_key(x_api_key: str | None) -> bool:
 
 
 # ── JWT authentication (for UI users) ────────────────────────────────────────
+
+async def _aktiv_användare(db: AsyncSession, payload: dict) -> UserORM | None:
+    """Den aktiva användaren en åtkomsttoken gäller – None om kontot saknas,
+    är avstängt eller tokenens version är gammal (lösenordsbyte, utloggning)."""
+    try:
+        user_id = uuid.UUID(str(payload.get("sub")))
+    except ValueError:
+        return None
+    result = await db.execute(select(UserORM).where(UserORM.id == user_id, UserORM.is_active.is_(True)))
+    user = result.scalar_one_or_none()
+    if user is None or not token_version_stämmer(payload, user.token_version):
+        return None
+    return user
+
 
 async def get_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)] = None,
@@ -42,14 +56,12 @@ async def get_current_user(
         payload = decode_token(credentials.credentials)
         if payload.get("type") != "access":
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
-        user_id = payload.get("sub")
-        if not user_id:
+        if not payload.get("sub"):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
 
-    result = await db.execute(select(UserORM).where(UserORM.id == user_id, UserORM.is_active.is_(True)))
-    user = result.scalar_one_or_none()
+    user = await _aktiv_användare(db, payload)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")
     return user
@@ -83,12 +95,9 @@ async def require_auth(
             payload = decode_token(credentials.credentials)
             if payload.get("type") != "access":
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
-            user_id = payload.get("sub")
-            if user_id:
-                result = await db.execute(select(UserORM).where(UserORM.id == user_id, UserORM.is_active.is_(True)))
-                user = result.scalar_one_or_none()
-                if user:
-                    return user
+            user = await _aktiv_användare(db, payload)
+            if user:
+                return user
         except JWTError:
             pass
 
@@ -110,12 +119,9 @@ async def require_admin_auth(
         try:
             payload = decode_token(credentials.credentials)
             if payload.get("type") == "access" and payload.get("role") == "admin":
-                user_id = payload.get("sub")
-                if user_id:
-                    result = await db.execute(select(UserORM).where(UserORM.id == user_id, UserORM.is_active.is_(True)))
-                    user = result.scalar_one_or_none()
-                    if user and user.role == "admin":
-                        return user
+                user = await _aktiv_användare(db, payload)
+                if user and user.role == "admin":
+                    return user
         except JWTError:
             pass
 
@@ -139,12 +145,9 @@ async def require_data_access(
         try:
             payload = decode_token(credentials.credentials)
             if payload.get("type") == "access":
-                user_id = payload.get("sub")
-                if user_id:
-                    result = await db.execute(select(UserORM).where(UserORM.id == user_id, UserORM.is_active.is_(True)))
-                    user = result.scalar_one_or_none()
-                    if user:
-                        return user
+                user = await _aktiv_användare(db, payload)
+                if user:
+                    return user
         except JWTError:
             pass
 

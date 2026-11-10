@@ -1,0 +1,14 @@
+# Publicerar API:t direkt på värden (API_PORT, standard 8100) – för utveckling
+# eller ett skript på samma maskin. I drift når webben och portalen API:t utan
+# den: webben över compose-nätet, portalen över deploy/shared-network.yml.
+#
+# Läggs till i .env:
+#   COMPOSE_FILE=docker-compose.yml:deploy/api-port.yml
+#
+# OBS: API:t direkt går förbi webbens nginx – TRUST_PROXY_HEADERS ska då vara
+# false, annars kan anroparen själv välja adressen som anropsgränserna räknar.
+
+services:
+  api:
+    ports:
+      - "${API_PORT:-8100}:8000"
