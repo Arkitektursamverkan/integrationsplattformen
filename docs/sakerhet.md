@@ -19,7 +19,11 @@ på det interna nätet eller plattformen själv – stoppar plattformen anrop ti
 Värdnamnet slås upp före varje anrop och stoppas om **någon** av adresserna är
 intern. Omdirigeringar följs inte. Spärren gäller REST-, 2C8- och
 Arkitekten-kopplingarna och knappen "Testa" (som då visar varför).
-SharePoint-kopplingen anropar bara Microsofts fasta adresser.
+SharePoint-kopplingen anropar bara Microsofts fasta adresser. Excel i
+SharePoint likaså: filens adress hämtas aldrig själv utan skickas till Graph,
+och nedladdningsadressen Graph lämnar följs bara om den ligger under
+sharepoint.com (utan token). Filen får vara högst 25 MB och packas upp till
+högst 250 MB; XML läses med defusedxml.
 
 | Inställning | Betydelse |
 |---|---|

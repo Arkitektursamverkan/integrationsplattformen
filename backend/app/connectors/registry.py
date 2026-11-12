@@ -29,6 +29,7 @@ def _auto_register() -> None:
     import app.connectors.generic_rest  # noqa: F401
     import app.connectors.csv_connector  # noqa: F401
     import app.connectors.arkitekten  # noqa: F401
+    import app.connectors.excel_sharepoint  # noqa: F401
 
 
 _auto_register()

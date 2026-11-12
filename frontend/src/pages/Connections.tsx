@@ -41,14 +41,18 @@ function HelpPanel({ title, children }: { title: string; children: React.ReactNo
 
 // ── Connector definitions ────────────────────────────────────────────────────
 
-type ConnectorType = "2c8" | "sharepoint" | "generic_rest" | "csv";
+type ConnectorType = "2c8" | "sharepoint" | "excel_sharepoint" | "generic_rest" | "csv";
 
 const CONNECTOR_INFO: Record<ConnectorType, { label: string; description: string }> = {
   "2c8": { label: "2C8", description: "Connect to 2C8 Modeling Tool to import process models, symbols, or run predefined lists." },
   sharepoint: { label: "SharePoint", description: "Connect to Microsoft 365 SharePoint to import list data via the Microsoft Graph API." },
+  excel_sharepoint: { label: "Excel in SharePoint", description: "Read a sheet or table in an Excel file (.xlsx) stored in SharePoint or OneDrive, via the Microsoft Graph API. Each row becomes a record." },
   generic_rest: { label: "Generic REST API", description: "Connect to any REST API by specifying the URL, authentication, and response format." },
   csv: { label: "CSV File", description: "Upload a CSV, TSV, or TXT file as a data source. The data is stored and available via the Data API." },
 };
+
+// Connectors with a demo/mock mode next to the live one.
+const hasMode = (t: ConnectorType) => t === "2c8" || t === "sharepoint" || t === "csv";
 
 // ── Component ────────────────────────────────────────────────────────────────
 
@@ -186,7 +190,7 @@ export default function Connections() {
     }
 
     const config: Record<string, unknown> = { ...configFields };
-    if (connectorType !== "generic_rest") config.mode = mode;
+    if (hasMode(connectorType)) config.mode = mode;
     if (connectorType === "2c8" && isApiMode) {
       config.resource_type = resourceType;
       config.verify_ssl = configFields.verify_ssl !== "false";
@@ -204,7 +208,7 @@ export default function Connections() {
       description: description || undefined,
       config,
       credentials: Object.keys(credentials).length > 0 ? credentials : undefined,
-      auth_type: connectorType === "sharepoint" && isApiMode ? "oauth2"
+      auth_type: (connectorType === "sharepoint" && isApiMode) || connectorType === "excel_sharepoint" ? "oauth2"
         : connectorType === "generic_rest" ? restAuthType
         : isApiMode ? "api_key" : "none",
     };
@@ -258,6 +262,7 @@ export default function Connections() {
     if (connectorType === "csv") return renderCsvConfig();
     if (connectorType === "generic_rest") return renderGenericRestConfig();
     if (connectorType === "sharepoint") return renderSharePointConfig();
+    if (connectorType === "excel_sharepoint") return renderExcelConfig();
     return render2C8Config();
   };
 
@@ -456,6 +461,35 @@ export default function Connections() {
     </Box>
   );
 
+  const renderExcelConfig = () => (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <TextField label="File address" required fullWidth value={configFields.file_url || ""}
+        onChange={(e) => setConfig("file_url", e.target.value)}
+        placeholder="https://contoso.sharepoint.com/sites/Architecture/Shared%20Documents/Systems.xlsx"
+        helperText="The address of the .xlsx file in SharePoint"
+      />
+      <HelpPanel title="Which address should I use?">
+        <p><strong>Recommended – the direct address.</strong> In SharePoint, select the file → <strong>Details</strong> (ⓘ) → <strong>Path</strong> → copy. It looks like <code>https://TENANT.sharepoint.com/sites/SITE/Shared%20Documents/Systems.xlsx</code>. Works with the narrow permission <code>Sites.Selected</code>.</p>
+        <p><strong>A sharing link</strong> (<code>…sharepoint.com/:x:/…</code>) or the address of the file open in Excel on the web also work, but require <code>Sites.Read.All</code> or <code>Files.Read.All</code>.</p>
+      </HelpPanel>
+      <TextField label="Table (optional)" fullWidth value={configFields.table || ""}
+        onChange={(e) => setConfig("table", e.target.value)}
+        placeholder="Systemlista"
+        helperText="Name of an Excel table (Format as Table). Takes precedence over the sheet. In Excel: click in the table → Table Design → Table Name."
+      />
+      <TextField label="Sheet (optional)" fullWidth value={configFields.sheet || ""}
+        onChange={(e) => setConfig("sheet", e.target.value)}
+        placeholder="Sheet1"
+        helperText="Used when no table is given. Empty = the first sheet. The first non-empty row is the header row."
+      />
+      <TextField label="ID column (optional)" fullWidth value={configFields.id_column || ""}
+        onChange={(e) => setConfig("id_column", e.target.value)}
+        placeholder="System-ID"
+        helperText="Column with a unique, stable value per row – it is how the EA portal recognises a system between imports. Empty = the first column."
+      />
+    </Box>
+  );
+
   const renderGenericRestConfig = () => (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <TextField label="API URL" required fullWidth value={configFields.url || ""}
@@ -526,7 +560,7 @@ export default function Connections() {
       );
     }
 
-    if (connectorType === "sharepoint" && isApiMode) {
+    if ((connectorType === "sharepoint" && isApiMode) || connectorType === "excel_sharepoint") {
       return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <Alert severity="warning">Credentials are encrypted before storage and never shown in API responses.</Alert>
@@ -562,7 +596,11 @@ export default function Connections() {
             <ol>
               <li>In your app → <strong>API permissions</strong> → <strong>Add a permission</strong></li>
               <li>Choose <strong>Microsoft Graph</strong> → <strong>Application permissions</strong></li>
-              <li>Search and add: <code>Sites.Read.All</code></li>
+              {connectorType === "excel_sharepoint" ? (
+                <li>Add <code>Sites.Selected</code> (read access to one site only – an admin then grants the app <code>read</code> on that site, e.g. with PnP PowerShell <code>Grant-PnPAzureADAppSitePermission -AppId CLIENT-ID -DisplayName "Integration Platform" -Site https://TENANT.sharepoint.com/sites/SITE -Permissions Read</code>), or the broader <code>Sites.Read.All</code></li>
+              ) : (
+                <li>Search and add: <code>Sites.Read.All</code></li>
+              )}
               <li>Click <strong>Grant admin consent</strong> (requires admin rights in your organization)</li>
             </ol>
 
@@ -623,10 +661,10 @@ export default function Connections() {
 
   const renderStep3 = () => {
     const config: Record<string, unknown> = { ...configFields };
-    if (connectorType !== "generic_rest") config.mode = mode;
+    if (hasMode(connectorType)) config.mode = mode;
     if (connectorType === "2c8" && isApiMode) config.resource_type = resourceType;
     if (connectorType === "generic_rest") config.auth_type = restAuthType;
-    const hasCreds = connectorType === "sharepoint" && isApiMode
+    const hasCreds = (connectorType === "sharepoint" && isApiMode) || connectorType === "excel_sharepoint"
       ? !!(credentialFields.tenant_id && credentialFields.client_id && credentialFields.client_secret)
       : Object.values(credentialFields).some((v) => v);
 
@@ -637,7 +675,7 @@ export default function Connections() {
           <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
               <Chip label={CONNECTOR_INFO[connectorType].label} color="primary" size="small" />
-              {connectorType !== "generic_rest" && <Chip label={mode === "mock" ? "Mock" : "Live API"} variant="outlined" size="small" />}
+              {hasMode(connectorType) && <Chip label={mode === "mock" ? "Mock" : "Live API"} variant="outlined" size="small" />}
             </Box>
             <Typography variant="h6">{name}</Typography>
             {description && <Typography variant="body2" sx={{ color: "text.secondary" }}>{description}</Typography>}
@@ -680,6 +718,7 @@ export default function Connections() {
     if (activeStep === 1) {
       if (connectorType === "csv") return !!csvFile;
       if (connectorType === "generic_rest") return !!configFields.url;
+      if (connectorType === "excel_sharepoint") return !!configFields.file_url?.trim();
       if (!isApiMode) return true;
       if (connectorType === "sharepoint") return !!(configFields.site_id && configFields.list_id);
       if (connectorType === "2c8") {
@@ -688,6 +727,9 @@ export default function Connections() {
         return hasBase;
       }
       return true;
+    }
+    if (activeStep === 2 && connectorType === "excel_sharepoint") {
+      return !!(credentialFields.tenant_id && credentialFields.client_id && credentialFields.client_secret);
     }
     return true;
   };
@@ -811,6 +853,28 @@ export default function Connections() {
             </>
           )}
 
+          {/* ── Excel in SharePoint config fields ── */}
+          {editConn?.connector_type === "excel_sharepoint" && (
+            <>
+              <TextField label="File address" fullWidth value={editConfigFields.file_url || ""}
+                onChange={(e) => setEditConfig2("file_url", e.target.value)}
+                helperText="The address of the .xlsx file in SharePoint"
+              />
+              <TextField label="Table (optional)" fullWidth value={editConfigFields.table || ""}
+                onChange={(e) => setEditConfig2("table", e.target.value)}
+                helperText="Takes precedence over the sheet"
+              />
+              <TextField label="Sheet (optional)" fullWidth value={editConfigFields.sheet || ""}
+                onChange={(e) => setEditConfig2("sheet", e.target.value)}
+                helperText="Empty = the first sheet"
+              />
+              <TextField label="ID column (optional)" fullWidth value={editConfigFields.id_column || ""}
+                onChange={(e) => setEditConfig2("id_column", e.target.value)}
+                helperText="Unique, stable value per row. Empty = the first column"
+              />
+            </>
+          )}
+
           {/* ── 2C8 config fields ── */}
           {editConn?.connector_type === "2c8" && (
             <>
@@ -894,13 +958,14 @@ export default function Connections() {
 
           {/* ── Credentials section ── */}
           {((editConn?.connector_type === "sharepoint" && editConfigFields.mode === "api") ||
+            editConn?.connector_type === "excel_sharepoint" ||
             (editConn?.connector_type === "2c8" && editConfigFields.mode === "api") ||
             (editConn?.connector_type === "generic_rest" && editConfigFields.auth_type !== "none")) && (
             <>
               <Divider><Typography variant="caption" sx={{ color: "text.secondary" }}>Credentials</Typography></Divider>
               <Alert severity="info" sx={{ py: 0.5 }}>Leave fields empty to keep existing credentials. Fill in to replace.</Alert>
 
-              {editConn?.connector_type === "sharepoint" && (
+              {(editConn?.connector_type === "sharepoint" || editConn?.connector_type === "excel_sharepoint") && (
                 <>
                   <TextField label="Tenant ID" fullWidth autoComplete="off" value={editCredFields.tenant_id || ""}
                     onChange={(e) => setEditCred("tenant_id", e.target.value)}
