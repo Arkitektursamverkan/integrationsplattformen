@@ -9,6 +9,10 @@ funktioner, en ny korrigering för rättelser.
 
 - (inget än)
 
+## 0.11.0 – 2026-11-12
+
+- **Ny koppling: Excel i SharePoint.** Läser ett blad eller en tabell (Formatera som tabell) i en .xlsx-fil i SharePoint eller OneDrive via Microsoft Graph, med en app-registrering (tenant, client, klienthemlighet). Varje rad blir en post med rubrikerna som fält; id-kolumnen (förval: första kolumnen) blir `external_id`, som EA-portalen känner igen systemen med – dubbla id stoppar inläsningen. Filen anges med sin direktadress (fungerar med `Sites.Selected`) eller en delningslänk (kräver `Sites.Read.All`/`Files.Read.All`). Summarader i tabeller tas bort, datum blir ISO-datum. Nya beroenden: openpyxl, defusedxml.
+
 ## 0.10.0 – 2026-11-10
 
 - **Plattformen anmäler sin adress till portalen.** Med `PORTAL_URL` skickar plattformen vid varje hämtning också `PUT /installation/plattform` med sin interna adress (`http://<egen IP mot portalen>:8000/api/v1`), så att portalen hittar den utan `INTEGRATION_PLATFORM_URL`. På Render behöver portal-api därmed ingen referens till plattform-api: referenser åt båda hållen fick varje Blueprint-synk att sluta med fel. Hämtningen startar nu även när alla Entra-fält finns i miljön. En äldre portal (före 0.16.0) svarar med fel på anmälan, och det loggas utan att stoppa något.

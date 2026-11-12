@@ -1,7 +1,7 @@
 # Integrationsplattformen
 
 The data-integration half of Arkitekturportalen. It fetches data from other
-systems – SharePoint lists, 2C8 process models, REST APIs, CSV files,
+systems – SharePoint lists, Excel files in SharePoint, 2C8 process models, REST APIs, CSV files,
 Arkitekten flowcharts – transforms it in pipelines and serves it to the
 architecture portal, on a schedule or on demand.
 
