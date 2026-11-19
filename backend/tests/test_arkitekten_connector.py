@@ -117,6 +117,21 @@ class TestRecordShape:
         assert rec["prefix"] == "2.2.7"
         assert rec["bredd"] == 7536
 
+    def test_status_and_label_describe_the_approved_scene(self):
+        # REGRESSION: a flow with a draft on top of its approved version came
+        # out as "utkast 1.1" although the scene mirrored was the approved 1.0,
+        # and the portal captioned the approved picture as a draft.
+        sammanfattning = {"id": "a", "status": "utkast", "beteckning": "1.1", "fastslagenBeteckning": "1.0"}
+        c = _connector(base_url="http://x")
+        rec = c._record(sammanfattning, {"noder": []}, "fastslagen")
+        assert (rec["status"], rec["beteckning"]) == ("fastslagen", "1.0")
+        # The current version's scene keeps the flow's own status …
+        rec = c._record(sammanfattning, {"noder": []}, "aktuell")
+        assert (rec["status"], rec["beteckning"]) == ("utkast", "1.1")
+        # … and so does a flow with no approved version at all.
+        rec = c._record({"id": "b", "status": "utkast", "beteckning": "0.2"}, {"noder": []}, "fastslagen")
+        assert (rec["status"], rec["beteckning"]) == ("utkast", "0.2")
+
     def test_omits_prefix_when_absent(self):
         rec = _connector(base_url="http://x")._record({"id": "a"}, None)
         assert "prefix" not in rec

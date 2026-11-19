@@ -9,6 +9,10 @@ funktioner, en ny korrigering för rättelser.
 
 - (inget än)
 
+## 0.12.1 – 2026-11-19
+
+- **Arkitekten-kopplingen: status och beteckning beskriver bilden som speglas.** En process med ett utkast ovanpå sin fastslagna version redovisades som "utkast 1.1" fastän scenen som hämtades var den fastslagna 1.0 – portalen satte då "utkast" under den godkända bilden. När den fastslagna versionen hämtas (`version: fastslagen`) bär posten nu `status: fastslagen` och den fastslagna beteckningen.
+
 ## 0.12.0 – 2026-11-19
 
 - **2C8-kopplingen hämtar hela ritningar.** Ny resurstyp `diagrams` ("Diagrams" under What to fetch): en post per modell med hela ritningen – symbolerna med lägen, kopplingarna med vägar, beskrivningarna och vilka symboler som leder ner i en annan modell. Posten bär den gällande versionen (`current`) och, när den är en äldre version, den senast godkända (`approved`), med `workflow_state`, `version`, `approved_version` och `approved_is_current`. 2C8 lämnar alla versioners rader i samma lista och säger "godkänd" bara om den gällande; kopplingen delar upp raderna per version och läser versionsloggen, så att en mottagare som bara ska visa godkända processer aldrig får utkastet. Inställningar: `model_types` (förval `PROCESS_MODEL`), `prefix_root` (bara en gren), `concurrency`. En tom eller avkortad hämtning ger fel i stället för att gallra spegeln. Formatet står i `backend/app/connectors/two_c8_diagram.py`.
