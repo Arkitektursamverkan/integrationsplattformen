@@ -111,7 +111,7 @@ class ArkitektenConnector(BaseConnector):
             )
         return payload.get(key)
 
-    def _record(self, sammanfattning: dict, scen: dict | None) -> dict:
+    def _record(self, sammanfattning: dict, scen: dict | None, version: str | None = None) -> dict:
         """One flow → one record, in the shape the EA Application consumes.
 
         `external_id` is the upsert key in `flow_service`; Arkitekten's flow id
@@ -122,6 +122,12 @@ class ArkitektenConnector(BaseConnector):
         stores them (its invariant 9) — recomputing them here would let the
         number drift from the status it describes. Note that they are unrelated
         to `DataRecordORM.version`, which is this platform's own change counter.
+
+        They describe the SCENE the record carries. A flow with a draft on top
+        of its approved version reports itself as "utkast 1.1"; when the scene
+        fetched is the approved one (`version` = "fastslagen"), the record says
+        "fastslagen 1.0" — otherwise a consumer would label the approved
+        picture as a draft.
         """
         record = {
             "external_id": sammanfattning.get("id"),
@@ -135,6 +141,9 @@ class ArkitektenConnector(BaseConnector):
             "version_count": sammanfattning.get("versionCount"),
             "saved_at": sammanfattning.get("savedAt"),
         }
+        if scen is not None and version == "fastslagen" and sammanfattning.get("fastslagenBeteckning"):
+            record["status"] = "fastslagen"
+            record["beteckning"] = sammanfattning["fastslagenBeteckning"]
         # The process number ("2.2.7") is the fallback join key against the
         # portal's process nodes, for flows not published with a node id.
         if sammanfattning.get("prefix"):
@@ -223,7 +232,7 @@ class ArkitektenConnector(BaseConnector):
                         params={"version": version},
                     )
                     r.raise_for_status()
-                    return self._record(f, self._unwrap(r.json(), "scen"))
+                    return self._record(f, self._unwrap(r.json(), "scen"), version)
 
             return list(await asyncio.gather(*(en(f) for f in flows)))
 
