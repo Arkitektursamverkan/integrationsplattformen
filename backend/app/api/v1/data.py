@@ -85,7 +85,10 @@ async def list_records(
     result = await db.execute(
         select(DataRecordORM)
         .where(DataRecordORM.flow_id == flow_id, _VISIBLE)
-        .order_by(DataRecordORM.created_at.desc())
+        # Posterna från en körning skapas i samma ögonblick. Utan en andra
+        # nyckel är ordningen mellan dem odefinierad, och då kan en post hamna
+        # på två sidor och en annan på ingen.
+        .order_by(DataRecordORM.created_at.desc(), DataRecordORM.id)
         .offset((page - 1) * page_size)
         .limit(page_size)
     )
@@ -141,7 +144,7 @@ async def list_changes(
     total = count_result.scalar() or 0
 
     result = await db.execute(
-        base_query.order_by(DataRecordORM.updated_at.desc())
+        base_query.order_by(DataRecordORM.updated_at.desc(), DataRecordORM.id)
         .offset((page - 1) * page_size)
         .limit(page_size)
     )

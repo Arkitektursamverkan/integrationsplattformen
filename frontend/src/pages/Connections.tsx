@@ -363,11 +363,13 @@ export default function Connections() {
               <MenuItem value="models">Models (process diagrams)</MenuItem>
               <MenuItem value="symbols">Symbols (objects)</MenuItem>
               <MenuItem value="lists">Lists (predefined queries)</MenuItem>
+              <MenuItem value="diagrams">Diagrams (whole drawings, per version)</MenuItem>
             </Select>
             <FormHelperText>
               {resourceType === "models" && "Fetches all process diagrams — the most common choice for EA integration"}
               {resourceType === "symbols" && "Fetches reusable objects like activities, roles, and systems"}
               {resourceType === "lists" && "Executes a predefined 2C8 list/report"}
+              {resourceType === "diagrams" && "Fetches every model's whole drawing — symbols, connections and descriptions — for the current version and the approved one"}
             </FormHelperText>
           </FormControl>
 
@@ -903,6 +905,7 @@ export default function Connections() {
                       <MenuItem value="models">Models (process diagrams)</MenuItem>
                       <MenuItem value="symbols">Symbols (objects)</MenuItem>
                       <MenuItem value="lists">Lists (predefined queries)</MenuItem>
+                      <MenuItem value="diagrams">Diagrams (whole drawings, per version)</MenuItem>
                     </Select>
                   </FormControl>
                   {editConfigFields.resource_type === "lists" && (
