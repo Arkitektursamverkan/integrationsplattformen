@@ -9,6 +9,10 @@ funktioner, en ny korrigering för rättelser.
 
 - (inget än)
 
+## 0.13.0 – 2026-11-19
+
+- **Arkitekten-kopplingen för vidare processens ursprung.** En process som en integration läser in i Arkitekten från ett annat system bär `ursprung` (Arkitekten 0.15.0): källsystemets namn, om bilden är framställd automatiskt och vilket flöde här i plattformen som hämtar underlaget. Posten bär nu samma uppgift, så att EA-portalen kan visa den vid processbilden och fråga plattformen om flödet är påslaget.
+
 ## 0.12.1 – 2026-11-19
 
 - **Arkitekten-kopplingen: status och beteckning beskriver bilden som speglas.** En process med ett utkast ovanpå sin fastslagna version redovisades som "utkast 1.1" fastän scenen som hämtades var den fastslagna 1.0 – portalen satte då "utkast" under den godkända bilden. När den fastslagna versionen hämtas (`version: fastslagen`) bär posten nu `status: fastslagen` och den fastslagna beteckningen.
