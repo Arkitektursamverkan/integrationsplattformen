@@ -11,12 +11,14 @@ The 2C8 API organises data as:
 """
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 
 import httpx
 
 from app.connectors import natverk
+from app.connectors import two_c8_diagram as diagram
 from app.connectors.base import BaseConnector
 from app.connectors.registry import register_connector
 
@@ -26,6 +28,14 @@ from app.connectors.registry import register_connector
 # with a high `maxResults` and verify we got all `total` rows. Override via
 # the `max_results` config field for very large repositories.
 _DEFAULT_MAX_RESULTS = 10000
+
+# Diagrams cost several requests per model, and one more per model in the
+# repository for the drill-down map. Bounded so a fetch does not flood a single
+# 2C8 server; the timeout is per request and generous because the symbol list
+# of a whole repository comes back in one response.
+_DIAGRAM_CONCURRENCY = 8
+_DIAGRAM_TIMEOUT = 180.0
+_DIAGRAM_MAX_RESULTS = 20000
 
 
 def _resolve_parent_prefix(prefix: str, available_prefixes) -> str:
@@ -151,12 +161,18 @@ class TwoC8Connector(BaseConnector):
         - "models"  — list all models (process diagrams) in the repository
         - "symbols" — list all symbols (objects) in the repository
         - "lists"   — execute a pre-defined 2C8 list/query
+        - "diagrams" — every model's whole drawing (vertices, edges,
+                       descriptions), the current version and the approved one
         """
         repository_id = self.config.get("repository_id", "")
         if not repository_id:
             raise ValueError("repository_id is required for API mode")
 
         resource_type = self.config.get("resource_type", "models")
+
+        if resource_type == "diagrams":
+            async with natverk.klient(timeout=_DIAGRAM_TIMEOUT, verify=self._verify_ssl()) as client:
+                return await self._fetch_diagrams(client, repository_id)
 
         async with natverk.klient(timeout=30.0, verify=self._verify_ssl()) as client:
             if resource_type == "models":
@@ -268,6 +284,183 @@ class TwoC8Connector(BaseConnector):
             for log_item in version.get("logItems", [])
         )
 
+    # ── diagrams ──────────────────────────────────────────────────────────
+
+    async def _get_all(
+        self, client: httpx.AsyncClient, path: str, *, complete: bool = True
+    ) -> list[dict]:
+        """A whole list with every field, or an error.
+
+        Unlike `_get_paginated` this refuses a truncated answer: half a drawing
+        is worse than none, and the 2C8 backend omits fields without
+        `projection=ALL`. `complete=False` is for the version log, where 2C8's
+        `total` also counts versions it does not return.
+        """
+        max_results = int(self.config.get("max_results", _DIAGRAM_MAX_RESULTS))
+        resp = await client.get(
+            f"{self._base_url()}{path}",
+            headers=self._headers(),
+            params={"projection": "ALL", "startAt": 0, "maxResults": max_results},
+        )
+        resp.raise_for_status()
+        payload = resp.json()
+        if isinstance(payload, list):
+            return payload
+        items = payload.get("data") or payload.get("values") or payload.get("results") or []
+        if isinstance(items, dict):
+            items = [items]
+        total = payload.get("total")
+        if complete and isinstance(total, int) and total > len(items):
+            raise RuntimeError(
+                f"2C8 reports {total} rows for {path} but returned {len(items)}. "
+                f"Raise max_results (currently {max_results}) on the connection."
+            )
+        return items
+
+    async def _fetch_diagrams(self, client: httpx.AsyncClient, repo_id: str) -> list[dict]:
+        """Every model's drawing: the current version and the approved one.
+
+        One record per model:
+          - external_id, name, prefix, model_type
+          - workflow_state      ← the CURRENT version's state, never promoted
+          - version             ← the current version number
+          - approved_version    ← the latest APPROVED version number, or null
+          - approved_is_current ← true when those two are the same version
+          - current             ← the current version's diagram
+          - approved            ← the approved version's diagram when it is an
+                                  OLDER version; null when it is the current
+                                  one (read `current`) or when none is approved
+          - approved_missing    ← true when an older version is approved but
+                                  2C8 no longer returns its rows
+
+        The diagram format is described in `two_c8_diagram.build_export`.
+        Config: `model_types` (default PROCESS_MODEL), `prefix_root` (only that
+        model and the ones numbered below it), `language_id`, `concurrency`.
+        """
+        repo = f"/mt-backend/api/v1/repositories/{repo_id}"
+        language = self.config.get("language_id") or None
+        if not language:
+            languages = await self._get_all(client, f"{repo}/languages")
+            language = next(
+                (l.get("uuid") for l in languages if l.get("defaultLanguage")),
+                languages[0].get("uuid") if languages else None,
+            )
+
+        all_models = await self._get_all(client, f"{repo}/models")
+        if not all_models:
+            # Empty is a broken answer, not an empty repository worth mirroring:
+            # reporting it would prune every stored diagram.
+            raise RuntimeError("2C8 returned no models. Refusing to report an empty result.")
+
+        typer = self.config.get("model_types") or ["PROCESS_MODEL"]
+        if isinstance(typer, str):
+            typer = [t.strip() for t in typer.split(",") if t.strip()]
+        rot = str(self.config.get("prefix_root") or "").strip()
+
+        def vald(m: dict) -> bool:
+            if m.get("modelType") not in typer:
+                return False
+            if not rot:
+                return True
+            prefix = m.get("prefix") or ""
+            return prefix == rot or prefix.startswith(rot + ".")
+
+        models = [m for m in all_models if m.get("uuid") and vald(m)]
+
+        symbols = {
+            s["uuid"]: s for s in await self._get_all(client, f"{repo}/symbols") if s.get("uuid")
+        }
+        layer_types = {
+            lt["uuid"]: lt for lt in await self._get_all(client, f"{repo}/layer-types") if lt.get("uuid")
+        }
+
+        gate = asyncio.Semaphore(int(self.config.get("concurrency", _DIAGRAM_CONCURRENCY)))
+
+        # symbol uuid → the models it breaks down into. 2C8 stores the relation
+        # on the TARGET model, so it can only be read backwards: ask every
+        # model what it is broken down from, then invert.
+        drilldowns: dict[str, list[dict]] = {}
+
+        async def nedbrytning(m: dict) -> None:
+            async with gate:
+                rows = await self._get_all(client, f"{repo}/models/{m['uuid']}/broken-down-from")
+            for row in rows:
+                symbol_uuid = (row.get("symbol") or {}).get("uuid") or row.get("uuid")
+                if not symbol_uuid:
+                    continue
+                drilldowns.setdefault(symbol_uuid, []).append({
+                    "model_id": m["uuid"],
+                    "name": diagram.title_of(m, language),
+                    "prefix": m.get("prefix") or None,
+                    "is_primary": bool(row.get("owning")),
+                })
+
+        await asyncio.gather(*(nedbrytning(m) for m in all_models if m.get("uuid")))
+        for entries in drilldowns.values():
+            # The owning model first, then a stable order.
+            entries.sort(key=lambda e: (not e["is_primary"], e["prefix"] or "", e["model_id"]))
+
+        async def en(m: dict) -> dict:
+            base = f"{repo}/models/{m['uuid']}"
+            async with gate:
+                vertices = await self._get_all(client, f"{base}/vertices")
+                edges = await self._get_all(client, f"{base}/edges")
+                descriptions = await self._get_all(client, f"{base}/descriptions")
+                model_layers = await self._get_all(client, f"{base}/layers")
+                current = int(m.get("version") or 0)
+                state = m.get("workflowState") or ""
+                # The version log is only needed when the current version is
+                # not the approved one and there is an older one to look at.
+                versions = (
+                    await self._get_all(client, f"{base}/versions", complete=False)
+                    if state != diagram.APPROVED and current > 0
+                    else []
+                )
+
+            approved = diagram.approved_version(m, versions)
+            name = diagram.title_of(m, language)
+            v_blocks = diagram.split_versions(vertices, "uuid")
+            e_blocks = diagram.split_versions(edges, "uuid")
+            d_blocks = diagram.split_versions(descriptions, "descriptionType")
+
+            def export(version: int, workflow_state: str) -> dict | None:
+                v = diagram.block_for(v_blocks, version, current)
+                if v is None:
+                    return None
+                return diagram.build_export(
+                    model=m,
+                    name=name,
+                    version=version,
+                    workflow_state=workflow_state,
+                    vertices=v,
+                    edges=diagram.block_for(e_blocks, version, current) or [],
+                    descriptions=diagram.block_for(d_blocks, version, current) or [],
+                    model_layers=model_layers,
+                    symbols=symbols,
+                    layer_types=layer_types,
+                    drilldowns=drilldowns,
+                    language=language,
+                )
+
+            older = approved is not None and approved != current
+            approved_export = export(approved, diagram.APPROVED) if older else None
+            return {
+                "external_id": m["uuid"],
+                "name": name,
+                "prefix": m.get("prefix") or "",
+                "model_type": m.get("modelType", ""),
+                "workflow_state": state,
+                "version": current,
+                "approved_version": approved,
+                "approved_is_current": approved is not None and approved == current,
+                "approved_missing": older and approved_export is None,
+                "last_modified": m.get("lastModified"),
+                "current": export(current, state),
+                "approved": approved_export,
+            }
+
+        return list(await asyncio.gather(*(en(m) for m in models)))
+
     async def _fetch_symbols(self, client: httpx.AsyncClient, repo_id: str) -> list[dict]:
         """Fetch all symbols (objects) from a repository."""
         configured_lang = self.config.get("language_id") or None
@@ -378,9 +571,24 @@ class TwoC8Connector(BaseConnector):
                 },
                 "resource_type": {
                     "type": "string",
-                    "enum": ["models", "symbols", "lists"],
+                    "enum": ["models", "symbols", "lists", "diagrams"],
                     "default": "models",
-                    "description": "What to fetch: models (process diagrams), symbols (objects), or lists (pre-defined queries)",
+                    "description": "What to fetch: models (the list of process models), symbols (objects), lists (pre-defined queries), or diagrams (every model's whole drawing: the current version and the approved one)",
+                },
+                "model_types": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "default": ["PROCESS_MODEL"],
+                    "description": "Model types to include (only for resource_type=diagrams)",
+                },
+                "prefix_root": {
+                    "type": "string",
+                    "description": "Only the model with this number and the ones below it, e.g. 4.4 (only for resource_type=diagrams)",
+                },
+                "concurrency": {
+                    "type": "integer",
+                    "default": _DIAGRAM_CONCURRENCY,
+                    "description": "Simultaneous requests to 2C8 (only for resource_type=diagrams)",
                 },
                 "list_id": {
                     "type": "string",

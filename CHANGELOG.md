@@ -9,6 +9,11 @@ funktioner, en ny korrigering för rättelser.
 
 - (inget än)
 
+## 0.12.0 – 2026-11-19
+
+- **2C8-kopplingen hämtar hela ritningar.** Ny resurstyp `diagrams` ("Diagrams" under What to fetch): en post per modell med hela ritningen – symbolerna med lägen, kopplingarna med vägar, beskrivningarna och vilka symboler som leder ner i en annan modell. Posten bär den gällande versionen (`current`) och, när den är en äldre version, den senast godkända (`approved`), med `workflow_state`, `version`, `approved_version` och `approved_is_current`. 2C8 lämnar alla versioners rader i samma lista och säger "godkänd" bara om den gällande; kopplingen delar upp raderna per version och läser versionsloggen, så att en mottagare som bara ska visa godkända processer aldrig får utkastet. Inställningar: `model_types` (förval `PROCESS_MODEL`), `prefix_root` (bara en gren), `concurrency`. En tom eller avkortad hämtning ger fel i stället för att gallra spegeln. Formatet står i `backend/app/connectors/two_c8_diagram.py`.
+- **Data-API:t bläddrar stabilt.** Posterna från en körning skapas i samma ögonblick, och utan en andra sorteringsnyckel kunde en post hamna på två sidor och en annan på ingen. `records` och `changes` sorterar nu även på id.
+
 ## 0.11.0 – 2026-11-12
 
 - **Ny koppling: Excel i SharePoint.** Läser ett blad eller en tabell (Formatera som tabell) i en .xlsx-fil i SharePoint eller OneDrive via Microsoft Graph, med en app-registrering (tenant, client, klienthemlighet). Varje rad blir en post med rubrikerna som fält; id-kolumnen (förval: första kolumnen) blir `external_id`, som EA-portalen känner igen systemen med – dubbla id stoppar inläsningen. Filen anges med sin direktadress (fungerar med `Sites.Selected`) eller en delningslänk (kräver `Sites.Read.All`/`Files.Read.All`). Summarader i tabeller tas bort, datum blir ISO-datum. Nya beroenden: openpyxl, defusedxml.
