@@ -159,6 +159,18 @@ class ArkitektenConnector(BaseConnector):
             record["ägare"] = publicering.get("ägare")
             record["beskrivning"] = publicering.get("beskrivning")
             record["publicerad_at"] = publicering.get("publiceradAt")
+        # Where the process comes from, when an integration reads it into
+        # Arkitekten from another system: the source system's name, whether the
+        # picture is generated automatically, and the platform flow that fetches
+        # the underlying data. The portal shows it next to the picture and asks
+        # this platform whether that flow is still switched on.
+        ursprung = sammanfattning.get("ursprung")
+        if isinstance(ursprung, dict) and isinstance(ursprung.get("system"), str) and ursprung["system"].strip():
+            record["ursprung"] = {
+                "system": ursprung["system"].strip()[:100],
+                "automatisk": ursprung.get("automatisk") is True,
+                **({"flode": ursprung["flode"]} if isinstance(ursprung.get("flode"), str) else {}),
+            }
         if scen is not None:
             record["scen"] = scen
             # Lifted out of the scene so a consumer can size a canvas without

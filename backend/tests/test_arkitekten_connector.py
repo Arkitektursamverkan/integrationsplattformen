@@ -117,6 +117,17 @@ class TestRecordShape:
         assert rec["prefix"] == "2.2.7"
         assert rec["bredd"] == 7536
 
+    def test_origin_travels_with_the_record(self):
+        c = _connector(base_url="http://x")
+        rec = c._record(
+            {"id": "a", "ursprung": {"system": " Källsystemet ", "automatisk": True, "flode": "f-1", "annat": 1}},
+            None,
+        )
+        assert rec["ursprung"] == {"system": "Källsystemet", "automatisk": True, "flode": "f-1"}
+        # No origin, or one without a system name, is no origin at all.
+        assert "ursprung" not in c._record({"id": "b"}, None)
+        assert "ursprung" not in c._record({"id": "c", "ursprung": {"automatisk": True}}, None)
+
     def test_status_and_label_describe_the_approved_scene(self):
         # REGRESSION: a flow with a draft on top of its approved version came
         # out as "utkast 1.1" although the scene mirrored was the approved 1.0,
