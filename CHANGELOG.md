@@ -7,7 +7,9 @@ funktioner, en ny korrigering för rättelser.
 
 ## Ej släppt
 
-- (inget än)
+## 0.14.0 – 2026-11-23
+
+- **Arkitekten-kopplingen för vidare informationsklassningen.** En process eller systemskiss som klassats i Arkitekten (0.19.0) bär `klassning`: nivåns id och namn och den skyddsklass nivån kräver (`skyddsklass`, `skyddsklass_namn`). EA-portalen avgör av den vem som får se bilden. Fältet följer med oavsett om nivån skrivs ut i själva bilden.
 
 ## 0.13.0 – 2026-11-19
 

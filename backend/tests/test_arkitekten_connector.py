@@ -128,6 +128,37 @@ class TestRecordShape:
         assert "ursprung" not in c._record({"id": "b"}, None)
         assert "ursprung" not in c._record({"id": "c", "ursprung": {"automatisk": True}}, None)
 
+    def test_classification_travels_with_the_record(self):
+        c = _connector(base_url="http://x")
+        rec = c._record(
+            {
+                "id": "a",
+                "klassning": {
+                    "nivå": "3-1-extra",
+                    "namn": " Nivå 3.1 ",
+                    "skyddsklass": "kansliga",
+                    "skyddsklassNamn": "Känsliga personuppgifter",
+                    "satt": "x",
+                },
+            },
+            None,
+        )
+        assert rec["klassning"] == {
+            "nivå": "3-1-extra",
+            "namn": "Nivå 3.1",
+            "skyddsklass": "kansliga",
+            "skyddsklass_namn": "Känsliga personuppgifter",
+        }
+        # A level that requires nothing extra.
+        fri = c._record({"id": "b", "klassning": {"nivå": "niva-0", "namn": "Nivå 0"}}, None)
+        assert fri["klassning"] == {"nivå": "niva-0", "namn": "Nivå 0", "skyddsklass": None}
+        # Malformed or missing: no classification at all.
+        assert "klassning" not in c._record({"id": "c"}, None)
+        assert "klassning" not in c._record({"id": "d", "klassning": {"nivå": "Ö!", "namn": "x"}}, None)
+        bad = c._record({"id": "e", "klassning": {"nivå": "n", "namn": "N", "skyddsklass": "../x"}}, None)
+        # An unreadable requirement is never dropped: nobody but an admin holds "okand".
+        assert bad["klassning"]["skyddsklass"] == "okand"
+
     def test_status_and_label_describe_the_approved_scene(self):
         # REGRESSION: a flow with a draft on top of its approved version came
         # out as "utkast 1.1" although the scene mirrored was the approved 1.0,

@@ -20,6 +20,7 @@ family ``2c8``; it is read as ``affarsprocess``.
 from __future__ import annotations
 
 import asyncio
+import re
 
 import httpx
 import structlog
@@ -49,6 +50,31 @@ log = structlog.get_logger(__name__)
 # stampede a single-process Node service.
 _DEFAULT_TIMEOUT = 60.0
 _DEFAULT_CONCURRENCY = 4
+
+_ID = re.compile(r"^[a-z0-9-]{1,64}$")
+
+
+def _klassning(rå: object) -> dict | None:
+    """The classification on a flow summary, or None. `skyddsklass` is the id
+    of the protection class the level requires, "okand" for a level missing
+    from the installation's model (only administrators see it), or None."""
+    if not isinstance(rå, dict):
+        return None
+    nivå, namn = rå.get("nivå"), rå.get("namn")
+    if not (isinstance(nivå, str) and _ID.fullmatch(nivå) and isinstance(namn, str) and namn.strip()):
+        return None
+    klass = rå.get("skyddsklass")
+    ut: dict = {"nivå": nivå, "namn": namn.strip()[:120], "skyddsklass": None}
+    if isinstance(klass, str) and _ID.fullmatch(klass):
+        ut["skyddsklass"] = klass
+        klassnamn = rå.get("skyddsklassNamn")
+        if isinstance(klassnamn, str) and klassnamn.strip():
+            ut["skyddsklass_namn"] = klassnamn.strip()[:120]
+    elif klass is not None:
+        # A requirement we cannot read is kept as one nobody holds: hidden,
+        # never shown to all.
+        ut["skyddsklass"] = "okand"
+    return ut
 
 
 @register_connector
@@ -171,6 +197,13 @@ class ArkitektenConnector(BaseConnector):
                 "automatisk": ursprung.get("automatisk") is True,
                 **({"flode": ursprung["flode"]} if isinstance(ursprung.get("flode"), str) else {}),
             }
+        # The information classification (Arkitekten 0.19.0): the level and
+        # the protection class it requires. The portal decides from it who may
+        # see the picture, so it travels whether or not the level is printed
+        # in the picture itself. Only the known fields, each checked.
+        klassning = _klassning(sammanfattning.get("klassning"))
+        if klassning:
+            record["klassning"] = klassning
         if scen is not None:
             record["scen"] = scen
             # Lifted out of the scene so a consumer can size a canvas without
